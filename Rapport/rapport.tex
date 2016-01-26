@@ -1,0 +1,139 @@
+\documentclass[12pt,a4paper]{article}
+
+%%% Packages %%%
+
+%\usepackage[frenchb]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{float}
+%\usepackage{algorithm}
+%\usepackage{algpseudocode}
+\usepackage{setspace}
+\usepackage[textfont={it}]{caption}
+
+%%% Environnement bigcenter : permet de centrer des images plus larges que \linewidth %%%
+\makeatletter
+\newskip\@bigflushglue \@bigflushglue = -100pt plus 1fil
+\def\bigcenter{\trivlist \bigcentering\item\relax}
+\def\bigcentering{\let\\\@centercr\rightskip\@bigflushglue
+\leftskip\@bigflushglue
+\parindent\z@\parfillskip\z@skip}
+\def\endbigcenter{\endtrivlist}
+\makeatother
+
+\newcommand{\reporttitle}{\vspace{3mm} MPRO-ECMA}
+\newcommand{\reportauthor}{Paulin \textsc{Jacquot}\\Roxane \textsc{Delpeyrat}}
+\newcommand{\reportsubject}{Projet 2015-2016}
+\newcommand{\HRule}{\rule{\linewidth}{0.5mm}}
+\setlength{\parskip}{1ex}
+
+\newcommand{\bb}[1]{\mathbb{#1}}
+\renewcommand{\cal}[1]{\mathcal{#1}}
+
+%%% Début du rapport %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{document}
+
+%%% Page de garde %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{titlepage}
+	\begin{center}
+		\begin{minipage}[c]{0.50\textwidth}
+			\begin{flushright}
+				% logo 1
+			\end{flushright}
+		\end{minipage}
+		\hfill
+		\begin{minipage}[c]{0.50\textwidth}
+			\begin{flushleft}
+				% logo 2
+			\end{flushleft}
+		\end{minipage}
+		
+		\vspace{2cm}
+		
+		\textsc{\Large \reportsubject}\\[0.5cm]
+		\HRule \\[0.4cm]
+		{\huge \bfseries \reporttitle}\\[0.4cm]
+		\HRule \\[1.5cm]
+		\begin{minipage}[t]{0.35\textwidth}
+			\begin{flushleft} \large
+				\emph{Auteurs :}\\
+					\reportauthor
+			\end{flushleft}
+		\end{minipage}
+		\vfill
+		{\large \today}
+	\end{center}
+\end{titlepage}
+
+
+%%% E1 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\paragraph{Exercice 1\\}
+
+1.1 On utilise des variables $x_{ij}$ pour $(i,j) \in M $, valant $1$ SSI la maille $(i,j)$ est selectionnée. Le programme s'écrit alors :
+
+\begin{align}
+max & \sum_{(ij)\in M} x_{ij} \\
+s.c. \ & \dfrac{\sum H_{ij}^pC_{ij}^p x_{ij}}{\sum C_{ij}^p x_{ij}}+ \dfrac{\sum H_{ij}^a C_{ij}^a x_{ij}}{\sum C_{ij}^a x_{ij}}\geq 2 \\
+& x_{ij}\in \{0,1\}
+\end{align}
+
+\vspace{0.5cm}
+
+1.2 Pour linéariser la contrainte fractionnaire, on utilise les variables :
+
+\begin{align*}
+y=\dfrac{1}{\sum C_{ij}^p x_{ij}} \ \ & \ \  z =\dfrac{1}{\sum C_{ij}^a x_{ij}}
+\end{align*}
+
+ce qui donne les contraintes quadratiques :
+
+\begin{align} \label{Cq}
+ \sum C_{ij}^p y \cdot x_{ij} = 1 \ \ & \ \   \sum C_{ij}^a z \cdot x_{ij} = 1
+\end{align}
+
+On linéarise ensuite ces contraintes. Pour cela, introduisons les quantités :
+
+\begin{align*}
+M^{p} = \dfrac{1}{\underset{(i,j) \in M }{min} C_{ij}^p} \ \ & \ \ M^{a} = \dfrac{1}{\underset{(i,j) \in M }{min} C_{ij}^a} 
+\end{align*}
+
+bien définies car les coefficients $C^p $ et $C^a$ sont strictement positifs pour tout $(ij) \in M$.
+
+En posant $u_{ij} = x_{ij} \cdot y$ et $v_{ij} = x_{ij} \cdot z$, les contraintes (\ref{Cq}) sont alors équivalentes à :
+
+\begin{align} \label{Clin}
+\sum_{(i,j) \in M} & C^p_{ij}\cdot u_{ij} =1 \ \ & \ \ \sum_{(i,j) \in M} & C^a_{ij}\cdot v_{ij} =1 \  & \\
+u_{ij} & \leq x_{ij} \cdot M^p \ \ & \ \  v_{ij} &\leq x_{ij} \cdot M^a, &\ \forall (i,j) \in M  \\
+u_{ij} & \leq y  \ \ & \ \  v_{ij} & \leq z, &\ \forall (i,j) \in M  \\
+u_{ij} & \geq (x_{ij}-1) \cdot M^p +y\ \ & \ \ v_{ij} & \geq (x_{ij}-1) \cdot M^a +z, & \forall (i,j) \in M \\
+u_{ij} & \geq 0 \ \ & \ \  v_{ij} & \geq 0, &\ \forall (i,j) \in M  
+\end{align}
+
+\vspace{1cm}
+
+
+%%% E1 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\paragraph{Exercice 2\\}
+
+Définissons, pour chaque $h\in [| 0,n^2 |] $, les variables binaires $ l_{ijh} \forall (i,j) \in M$.
+On modélise alors la connexité comme le suggère l'énoncé : il existe une et une seule maille ``racine''  de hauteur $h=0$ . Ensuite, chaque maille $(ij)$ sélectionnée se voit attribuer une hauteur $h$ (et alors $l_{ijh}=1$ ) et une maille est selectionnée avec hauteur $h>0$ si une de ses voisines est selectionnée avec hauteur $h-1$.
+
+Pour toute maille selectionnée $(i,j)$, il existe donc un chemin empruntant des mailles selectionnées jusqu'à la maille racine de hauteur 0. La solution est donc étoilée par rapport à cette maille racine, donc connexe.
+
+Les contraintes s'écrivent donc de la manière suivante : 
+
+\begin{align} \label{Cconnex}
+\sum_{(ij)\in M} l_{ij0} &= 1 \ \text{(une et une seule racine)} \\
+\sum_{h=0}^{n^2} l_{ijh} &= x_{ij} , \ \forall (i,j) \in M \\
+l_{ijh+1} & \leq l_{i-1jh} +l_{i+1jh} +l_{ij-1h} +l_{ij+1h}, \forall (i,j) \in M, \ h\in [|0, n^2 -1|] \\
+\l_{ijh} & \in \{0,1\} , \ \forall (i,j) \in M, \forall h\in [|0, n^2|] 
+\end{align}
+
+Cela représentant un très grand nombre de variables et de contraintes (en $\mathcal{O}(n^4) $ ), on pourra ajouter les contraintes au fur et à mesure, seulement si elles sont violées.
+
+\end{document}

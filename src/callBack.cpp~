@@ -1,0 +1,126 @@
+#include <ilcplex/ilocplex.h>
+
+ILOSTLBEGIN
+
+
+IloEnv env;
+int n;
+typedef IloArray<IloNumArray> DataMatrix;
+DataMatrix E;
+IloNumArray p = IloNumArray(env);
+IloArray Tricycle(env);
+
+void get3Cycle(){
+	for(int i = 0; i<n; i++){
+		for(int j=0; j<n; j++){
+			if(E[i][j] == 1){
+				for(int k=0; k<n; k++){
+					if(E[j][k] == 1 && k != i && E[i][k] == 1){
+						IloNumArray tmp(env,3);
+						tmp[0] = i;
+						tmp[1] = j;
+						tmp[2] = k;
+						Tricycle.add(tmp);
+					}
+				}
+			}
+		}
+	}
+}
+
+void getData(const IloEnv env, char nom_fichier[]) {
+
+	char char1;
+	int tmp;
+	ifstream fichier(nom_fichier);
+	if(fichier) {
+		//pour n
+		fichier >> char1 >> char1 >> n >> char1;
+		E=DataMatrix(env,n); // M est une matrice carrée à n lignes et n colonnes
+		fichier >> char1 >> char1 >> char1 ;
+
+		for(int i=0;i<n;i++) {
+			fichier >> char1 ; // lit le [
+			E[i]=IloNumArray(env); // On initialise la ième ligne de M
+			for(int j=0;j<n;j++) {
+				fichier >> tmp >> char1;
+				// Chaque ligne du fichier contient n fois le motif suivant :
+				// un entier suivi d’un caractère ("," ou "]" a la fin)
+				E[i].add(tmp); // On ajoute l’entier lu à la ième ligne de M
+			}
+			fichier >> char1;//lit ",", Fin de la lecture de la ième ligne de M
+		}
+		fichier >> char1; //lit ; a la fin de E
+
+		//pour p
+			fichier >> char1 >> char1 >>char1;
+			for(int i=0;i<n;i++) {
+				fichier >> tmp >> char1;
+				p.add(tmp);
+			}
+		fichier.close();
+	}
+}
+
+static void
+setdata (IloModel model, IloBoolVarArray x, IloRangeArray con)
+{
+   //IloEnv env = model.getEnv();
+
+	getTricycle();
+	for(int i=0; i<Tricycle.size(); i++){
+		con.add(x[Tricycle[i][0]]+x[Tricycle[i][1]]+x[Tricycle[i][2]] <= 1);
+	}
+   IloExpr px(env);
+   cout << "hello : " << px << endl;
+   for(int i=0; i < n; i++)
+	   px += p[i]*x[i];
+   cout << "fdmsndofsjnskdjnfksdjdnfkjsbrkjfbsdjk" << endl;
+   IloExpr ax(env);
+   for(int i=0; i < n; i++){
+	   for(int j=0; j < n; j++){
+		   con.add(E[i][j]*(x[i]+x[j]) <= 1);
+	   }
+   }
+   model.add(IloMaximize(env, px));
+   model.add(con);
+   px.end();
+
+}
+
+int main (void) {
+   //IloEnv env;
+   getData(env,"stablepoidsmax1.dat");
+   try {
+      IloModel model(env);
+
+      IloBoolVarArray var(env,n);
+      IloRangeArray con(env);
+      setdata (model, var, con);
+
+      IloCplex cplex(model);
+      cplex.solve();
+
+      env.out() << "Solution status = " << cplex.getStatus() << endl;
+      env.out() << "Solution value  = " << cplex.getObjValue() << endl;
+
+      IloNumArray vals(env);
+      cplex.getValues(vals, var);
+      env.out() << "Values        = " << vals << endl;
+      cplex.getSlacks(vals, con);
+      env.out() << "Slacks        = " << vals << endl;
+
+      cplex.exportModel("pl.lp");
+   }
+   catch (IloException& e) {
+      cerr << "Concert exception caught: " << e << endl;
+   }
+   catch (...) {
+      cerr << "Unknown exception caught" << endl;
+   }
+
+   env.end();
+   return 0;
+
+}
+

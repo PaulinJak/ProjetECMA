@@ -1,0 +1,139 @@
+#include <ilcplex/ilocplex.h>
+
+ILOSTLBEGIN
+
+
+IloEnv env;
+int n;
+typedef IloArray<IloNumArray> DataMatrix;
+DataMatrix E;
+IloNumArray p = IloNumArray(env);
+DataMatrix Tricycle(env);
+
+
+
+
+ILOUSERCUTCALLBACK3(CtCallback, IloExprArray, lhs, IloNumArray, rhs, IloNum, eps) {
+   IloInt n = lhs.getSize();
+   for (IloInt i = 0; i < n; i++) {
+      IloNum xrhs = rhs[i];
+      if ( xrhs < IloInfinity  &&  getValue(lhs[i]) > xrhs + eps ) {
+         IloRange cut;
+         try {
+            cut = (lhs[i] <= xrhs);
+            add(cut).end();
+            rhs[i] = IloInfinity;
+         }
+         catch (...) {
+            cut.end();
+            throw;
+         }
+      }
+   }
+}
+
+
+void getData(const IloEnv env, char nom_fichier[]) {
+
+	char char1;
+	int tmp;
+	ifstream fichier(nom_fichier);
+	if(fichier) {
+		//pour n
+		fichier >> char1 >> char1 >> n >> char1;
+		E=DataMatrix(env,n); // M est une matrice carrée à n lignes et n colonnes
+		fichier >> char1 >> char1 >> char1 ;
+
+		for(int i=0;i<n;i++) {
+			fichier >> char1 ; // lit le [
+			E[i]=IloNumArray(env); // On initialise la ième ligne de M
+			for(int j=0;j<n;j++) {
+				fichier >> tmp >> char1;
+				// Chaque ligne du fichier contient n fois le motif suivant :
+				// un entier suivi d’un caractère ("," ou "]" a la fin)
+				E[i].add(tmp); // On ajoute l’entier lu à la ième ligne de M
+			}
+			fichier >> char1;//lit ",", Fin de la lecture de la ième ligne de M
+		}
+		fichier >> char1; //lit ; a la fin de E
+
+		//pour p
+			fichier >> char1 >> char1 >>char1;
+			for(int i=0;i<n;i++) {
+				fichier >> tmp >> char1;
+				p.add(tmp);
+			}
+		fichier.close();
+	}
+}
+
+static void
+setdata (IloModel model, IloBoolVarArray x, IloRangeArray con,  IloExprArray lhs, IloNumArray rhs)
+{
+   //IloEnv env = model.getEnv();
+
+	get3Cycle();
+	for(int i=0; i<Tricycle.getSize(); i++){
+		lhs.add(x[Tricycle[i][0]]+x[Tricycle[i][1]]+x[Tricycle[i][2]] );
+		rhs.add(1.0);
+	}
+
+   IloExpr px(env);
+   for(int i=0; i < n; i++)
+	   px += p[i]*x[i];
+
+   IloExpr ax(env);
+   for(int i=0; i < n; i++){
+	   for(int j=0; j < n; j++){
+		   con.add(E[i][j]*(x[i]+x[j]) <= 1);
+	   }
+   }
+   model.add(IloMaximize(env, px));
+   model.add(con);
+   px.end();
+
+}
+
+int main (void) {
+   //IloEnv env;
+   getData(env,"stablepoidsmaxK9.dat");
+   try {
+
+     
+      IloModel model(env);
+      IloCplex cplex(model);
+
+      IloBoolVarArray var(env,n);
+      IloRangeArray con(env);
+      IloExprArray lhs(env);
+      IloNumArray rhs(env);
+      setdata (model, var, con,lhs,rhs);
+      
+       cplex.use(CtCallback(env, lhs, rhs, cplex.getParam(IloCplex::EpRHS)));
+       cplex.setParam(IloCplex::MIPInterval,1000);
+       cplex.setParam(IloCplex::MIPSearch,IloCplex ::Traditional);
+             cplex.setParam(IloCplex::CutsFactor, 1.0);
+       cplex.setParam(IloCplex::EachCutLim,0);
+        cplex.setParam(IloCplex::PreInd,0);
+       cplex.extract(model);
+      IloNumArray vals(env);
+      cplex.solve();
+      cplex.getValues(vals, var);
+      env.out() << "Values        = " << vals << endl;
+      cplex.getSlacks(vals, con);
+      env.out() << "Slacks        = " << vals << endl;
+
+      cplex.exportModel("pl.lp");
+   }
+   catch (IloException& e) {
+      cerr << "Concert exception caught: " << e << endl;
+   }
+   catch (...) {
+      cerr << "Unknown exception caught" << endl;
+   }
+
+   env.end();
+   return 0;
+
+}
+
