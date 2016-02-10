@@ -1,12 +1,13 @@
 #include <ilcplex/ilocplex.h>
+//#include "modele_Cplex.hpp"
+//#include "options.hpp"
+#include "instance_Cplex.hpp"
+#include "modele_Cplex.hpp"
+
 ILOSTLBEGIN
 
 
-IloEnv env;
-int n,m;
-double Ba,Bp;
 typedef IloArray<IloNumArray> DataMatrix;
-DataMatrix Ha,Ca,Hp,Cp;
 
 typedef IloArray<IloBoolVarArray> BoolVarMatrix;
 typedef IloArray<IloNumVarArray> NumVarMatrix;
@@ -14,8 +15,16 @@ typedef IloArray<IloNumVarArray> NumVarMatrix;
 //matrice à 3 dim pour les hauteurs:
 typedef IloArray<BoolVarMatrix> BoolVarMatrix3;
  
-void getData(const char* nom_fichier) {
-	char char1;
+void getData(const char* nom_fichier,IloEnv env,instance_Cplex& instance) {
+
+  int& n(instance.n);
+  int& m(instance.m);
+  DataMatrix& Ha(instance.Ha);
+  DataMatrix& Ca(instance.Ca);
+  DataMatrix& Hp(instance.Hp); 
+  DataMatrix& Cp(instance.Cp);
+
+  char char1;
 	double tmp;
 	
 	ifstream fichier(nom_fichier);
@@ -26,13 +35,15 @@ void getData(const char* nom_fichier) {
 		//pour m
 		fichier >> char1 >> char1 >> m >>char1;
 		cout <<"m="<< m<<"\n";
-
+		 
 		//pour Ba, si existe!
+		double Ba=0;
 		fichier >> char1 ;
 		if(char1=='B'){//then Ba est définie, et Bp aussi
 		  fichier >> char1 >> char1>>Ba >>char1;
 		  cout <<"Ba="<< Ba<<"\n";
-
+		  
+		  double Bp=0;
 		  //pour Bp
 		  fichier >> char1 >> char1 >>char1 >> Bp >>char1;
 		
@@ -119,10 +130,17 @@ void getData(const char* nom_fichier) {
 }
 
 
-static void
-setdata (IloModel model, BoolVarMatrix  x, NumVarMatrix u,  NumVarMatrix v,IloNumVar y,IloNumVar z, IloRangeArray constraintSet)
+void
+setdata (IloModel& model,IloEnv env, instance_Cplex& instance,BoolVarMatrix  x, NumVarMatrix u,  NumVarMatrix v,IloNumVar y,IloNumVar z, IloRangeArray constraintSet)
 {
-   //Calcul des bornes Ma et Mp
+   int& n(instance.n);
+  int& m(instance.m);
+  DataMatrix& Ha(instance.Ha);
+  DataMatrix& Ca(instance.Ca);
+  DataMatrix& Hp(instance.Hp); 
+  DataMatrix& Cp(instance.Cp);
+
+     //Calcul des bornes Ma et Mp
    double Ma=1;
    double Mp=1;
    cout << "Calcul des bornes..\n";
@@ -240,9 +258,15 @@ setdata (IloModel model, BoolVarMatrix  x, NumVarMatrix u,  NumVarMatrix v,IloNu
 
  //Connexity constraints
 
-static void
-setConnexityConstraints(IloModel model, BoolVarMatrix  x, BoolVarMatrix3 height, IloExprArray lhsCallback, IloNumArray rhsCallback,IloRangeArray connexityConstraintSet){
+void
+setConnexityConstraints(IloModel model,IloEnv env,  instance_Cplex const& instance, BoolVarMatrix  x, BoolVarMatrix3 height, IloExprArray lhsCallback, IloNumArray rhsCallback,IloRangeArray connexityConstraintSet){
 
+   int n(instance.n);
+  int m(instance.m);
+  DataMatrix Ha(instance.Ha);
+  DataMatrix Ca(instance.Ca);
+  DataMatrix Hp(instance.Hp); 
+  DataMatrix Cp(instance.Cp);
 
  //Contrainte (11)- une et une seule racine
  IloExpr sumH(env);
@@ -313,9 +337,18 @@ ILOLAZYCONSTRAINTCALLBACK3(CtCallback, IloExprArray, lhsCallback, IloNumArray, r
 }
 
 
-static void
-solveTreeConnexityConstraints (IloCplex cplex,IloModel model, BoolVarMatrix  x, NumVarMatrix u,  NumVarMatrix v,IloNumVar y,IloNumVar z,bool useCallBack,IloInt hMax)
-{      IloRangeArray connexityConstraintSet(env);
+void
+solveTreeConnexityConstraints (IloCplex cplex,IloModel model,IloEnv env, instance_Cplex const& instance, BoolVarMatrix  x, NumVarMatrix u,  NumVarMatrix v,IloNumVar y,IloNumVar z,bool useCallBack,IloInt hMax)
+{      
+
+    int  n(instance.n);
+  int  m(instance.m);
+  DataMatrix  Ha(instance.Ha);
+  DataMatrix  Ca(instance.Ca);
+  DataMatrix  Hp(instance.Hp); 
+  DataMatrix  Cp(instance.Cp);
+
+  IloRangeArray connexityConstraintSet(env);
 
       BoolVarMatrix3 height(env,m);
       
@@ -331,7 +364,7 @@ solveTreeConnexityConstraints (IloCplex cplex,IloModel model, BoolVarMatrix  x, 
       IloExprArray lhsCallback(env);
       IloNumArray rhsCallback(env);
 
-      setConnexityConstraints(model, x,height,lhsCallback,rhsCallback,connexityConstraintSet);
+      setConnexityConstraints(model,env,instance, x,height,lhsCallback,rhsCallback,connexityConstraintSet);
       cout<< "\nContraintes de connexité ajoutées!\n\n";
       
 
@@ -374,10 +407,15 @@ solveTreeConnexityConstraints (IloCplex cplex,IloModel model, BoolVarMatrix  x, 
       cout <<endl;
 }
 
-static void
-solveMinimizeEdges(IloCplex cplex,IloModel model, BoolVarMatrix  x, NumVarMatrix u,  NumVarMatrix v,IloNumVar y,IloNumVar z,IloInt solutionUnConnex){
+void
+solveMinimizeEdges(IloCplex cplex,IloModel model,IloEnv env,  instance_Cplex const& instance, BoolVarMatrix  x, NumVarMatrix u,  NumVarMatrix v,IloNumVar y,IloNumVar z,IloInt solutionUnConnex){
 
-
+   int  n(instance.n);
+  int  m(instance.m);
+  DataMatrix  Ha(instance.Ha);
+  DataMatrix  Ca(instance.Ca);
+  DataMatrix  Hp(instance.Hp); 
+  DataMatrix  Cp(instance.Cp);
   BoolVarMatrix verticalEdges(env,m);
 
    IloExpr sumVerticalEdges(env);
@@ -437,8 +475,11 @@ solveMinimizeEdges(IloCplex cplex,IloModel model, BoolVarMatrix  x, NumVarMatrix
       for(int j=0; j<n; j++){ 
 	if((Ca[i][j]>0) && (Cp[i][j]>0)){ //on verifie que la case existe ici
 	  sumX+= x[i][j];
-	}}}
- IloRange CutUnconnexSol(env);
+	}
+      }
+ }
+
+ IloRange CutUnconnexSol;
  CutUnconnexSol=(sumX<=solutionUnConnex);
  model.add(CutUnconnexSol);
 
@@ -463,123 +504,3 @@ for (IloModel::Iterator it(model); it.ok(); ++it) {
     
 }
 
-
-int main (int argc, char* argv[]) {
-   
-  //get instance fileName:
-  const char*  fileName;
-  if(argc>1)//we passed the filename in arg
-    fileName=argv[1];
-  else fileName = "instances/projet_5_8_1.dat";
-  
-  getData(fileName);
-  cout << "Données récupérées!\n";
-   try {
-     
-      IloModel model(env);
-
-      BoolVarMatrix x(env,m);
-      for(int i=0;i<m;i++) x[i]=IloBoolVarArray(env,n);
-
-      NumVarMatrix u(env,m);
-      for(int i=0;i<m;i++) u[i]=IloNumVarArray(env,n);
-
-      NumVarMatrix v(env,m);
-      for(int i=0;i<m;i++) v[i]=IloNumVarArray(env,n);
-
-      IloRangeArray constraintSet(env);
-      
-      IloNumVar y(env);
-
-      IloNumVar z(env);
-      cout << "Variables créées!\n";
-
-      setdata (model, x,u,v,y,z, constraintSet);
-      cout << " Modèle et contraintes définies!\n";
-
-      
-      IloCplex cplex(model);
-
-      cplex.solve();
-      
-      IloInt solutionUnConnex;
-      solutionUnConnex=cplex.getObjValue();
-
-
-      DataMatrix xUnconnex(env,m) ; //Solution optimale non connexe
-      for(int i=0;i<m;i++){
-	xUnconnex[i]=IloNumArray(env,n);
-	  cplex.getValues(xUnconnex[i], x[i]);
-	  }
-    
-      std::string Method ="MinimizeEdges"; //connexityTree";
-      if(Method=="connexityTree"){
-      
-	//We solve a first time the model without the connexity constraints, to get a good max bound of the height max : the value of the solution/2, then we add the connexity constraints :
-	IloInt hMax;
-	if(argc>2){ // we gave the hmax in argument/
-	  istringstream (argv[2])>>hMax;
-	  if(hMax==0)  hMax=solutionUnConnex/2+1;
-	} //else we use our upper bound
-	else hMax=solutionUnConnex/2+1;//(n*m/2+n/2);
-
-	bool useCallBack=false;
-	if(argc>3 && *argv[3]=='1')  useCallBack= true;
-	solveTreeConnexityConstraints(cplex,model,x,u,v,y,z,useCallBack,hMax);
-      }
-      
-      else if(Method=="MinimizeEdges"){
-	cout << "MinimizingEdges Method. \n";
-	solveMinimizeEdges(cplex,model,x,u,v,y,z,solutionUnConnex);
-      }
-           cout << "\nSolution non connexe optimale de valeur : "<<solutionUnConnex<<endl<<endl;
-           env.out() << "Values  of x in the unconnex solution  = " << endl;
-      for(int i=0;i<m;i++){
-	  cout<<xUnconnex[i]<<endl;}
-      
-      env.out() << "Values  of x      = " << endl;
-      for(int i=0;i<m;i++){
-	IloNumArray vals(env,n);
-	  cplex.getValues(vals, x[i]);
-	  cout<<vals<<endl;
-      }
-   
-
-      /* env.out()<< "Value of y = "<< cplex.getValue(y)<<endl;
-      // env.out()<< "Value of z = "<< cplex.getValue(z)<<endl;
-
-      env.out() << "Values  of u      = " << endl;
-      for(int i=0;i<m;i++){
-	IloNumArray vals(env,n);
-	cout << u[0][0];
-	  cplex.getValues(vals, u[i]);
-	  cout<<vals<<endl;
-      }
-      env.out() << "Values  of v      = "  << endl;
-      for(int i=0;i<m;i++){
-	  IloNumArray vals(env);
-	  cplex.getValues(vals, v[i]);
-	  cout<<vals<<endl;
-	  }*/
-      
-     
-      // cplex.getSlacks(vals, constraintSet);
-      //env.out() << "Slacks        = " << vals << endl;
-
-      cplex.exportModel("pl.lp");
-      }
-   catch (IloException& e) {
-      cerr << "Concert exception caught: " << e << endl;
-      cout << "Aucune maille ne peut etre selectionnée pour obtenir une solution admissible...\n";
-      if(argc>2){//then we used the hmax given in argument, so :
-	cout<<" hMax was given, try using calculated upper bound on hMax (without passing it as an argument.\n\n";
-      } 
-   }
-   catch (...) {
-      cerr << "Unknown exception caught" << endl;
-      }
-
-   env.end();
-   return 0;
-
-}  
