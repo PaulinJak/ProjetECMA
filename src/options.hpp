@@ -2,15 +2,16 @@
 #ifndef HPP_OPTIONS
 #define HPP_OPTIONS
 
-#include <boost/program_options.hpp>
-//#include "options.cpp"
-
-using namespace boost::program_options;
-
-#include <iostream>
 using namespace std;
 
-namespace po = boost::program_options;
+class option{
+private :
+  string option_name;
+  string option_description;
+public :
+  string option_value;
+  
+}
 
 // Declare the supported options.
 void init(int argc, char* argv[]){
