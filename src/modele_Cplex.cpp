@@ -263,10 +263,6 @@ setConnexityConstraints(IloModel model,IloEnv env,  instance_Cplex const& instan
 
    int n(instance.n);
   int m(instance.m);
-  DataMatrix Ha(instance.Ha);
-  DataMatrix Ca(instance.Ca);
-  DataMatrix Hp(instance.Hp); 
-  DataMatrix Cp(instance.Cp);
 
  //Contrainte (11)- une et une seule racine
  IloExpr sumH(env);
