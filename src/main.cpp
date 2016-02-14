@@ -2,7 +2,7 @@
 
 #include "modele_Cplex.hpp"
 #include "instance_Cplex.hpp"
-//#include "options.hpp"
+#include "options.hpp"
 
 ILOSTLBEGIN
 
