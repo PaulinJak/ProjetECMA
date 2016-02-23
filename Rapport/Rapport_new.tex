@@ -70,9 +70,15 @@
 	\end{center}
 \end{titlepage}
 
+\newpage
 
+\tableofcontents
+
+\newpage
+
+\section{Modèle mathématique}
 %%% E1 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\paragraph{Exercice 1\\}
+\subsection{Ex.1 : écriture d'un programme linéaire}
 
 1.1 On utilise des variables $x_{ij}$ pour $(i,j) \in M $, valant $1$ SSI la maille $(i,j)$ est selectionnée. Le programme s'écrit alors :
 
@@ -87,7 +93,7 @@ s.c. \label{critere} \ & \dfrac{\sum H_{ij}^pC_{ij}^p x_{ij}}{\sum C_{ij}^p x_{i
 1.2 Pour linéariser la contrainte fractionnaire (\ref{critere}), on utilise les variables :
 
 \begin{align*}
-y_{ij}=\dfrac{1}{\sum C_{ij}^p x_{ij}} \ \ & \ \  z_{ij} =\dfrac{1}{\sum C_{ij}^a x_{ij}}
+y=\dfrac{1}{\sum C_{ij}^p x_{ij}} \ \ & \ \  z =\dfrac{1}{\sum C_{ij}^a x_{ij}}
 \end{align*}
 
 ce qui donne les contraintes quadratiques :
@@ -126,7 +132,7 @@ Le programme linéaire s'obtient avec les contraintes (\ref{critereLin}) et \ref
 
 
 %%% E1 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\paragraph{Exercice 2\\}
+\subsection{Ex.2 : modélisation de la connexité }
 
 Définissons, pour chaque $h\in [| 0,n^2 |] $, les variables binaires $ l_{ijh} \forall (i,j) \in M$.
 On modélise alors la connexité comme le suggère l'énoncé : il existe une et une seule maille ``racine''  de hauteur $h=0$ . Ensuite, chaque maille $(ij)$ sélectionnée se voit attribuer une hauteur $h$ (et alors $l_{ijh}=1$ ) et une maille est selectionnée avec hauteur $h>0$ si une de ses voisines est selectionnée avec hauteur $h-1$.
@@ -143,5 +149,102 @@ l_{ijh+1} & \leq l_{i-1jh} +l_{i+1jh} +l_{ij-1h} +l_{ij+1h}, \forall (i,j) \in M
 \end{align}
 
 Cela représentant un très grand nombre de variables et de contraintes (en $\mathcal{O}(n^4) $ ), on pourra ajouter les contraintes au fur et à mesure, seulement si elles sont violées.
+
+
+\vspace{2cm}
+
+
+\section{Résolution directe}
+
+\subsection{Résolution frontale et borne}
+
+Nous avons implémenté le modèle précédent en utilisant l'API Cplex C++. Le modèle permet la résolution exacte des plus petites instances (5x8), mais le nombre de variables est trop élevé pour les instances plus grandes.
+
+Dans une heuristique plus évoluée, nous effectuons une première résolution du problème sans contraintes de connexités. La valeur optimale obtenue $M*$ donne ensuite une très bonne borne sur la hauteur maximale de l'arbre de connexité décrit dans la partie précédente (la borne triviale était de l'ordre de $n \times m$). La hauteur de l'arbre de peut en effet dépasser :
+
+\[ h_{max} = \dfrac{1}{2} M* +1\]
+
+ Cela permet ainsi de générer significativement moins de variables binaires correspondant aux contraintes de connexité.
+
+Avec ce modèle, nous arrivons à résoudre quelques unes des instances 10x12, mais cette méthode n'est pas efficace pour les instances ayant une solution non connexe de valeur élevée (comme l'instance $10\_12\_1.dat$).
+
+\vspace{0.5cm}
+
+Le fait de connaître la valeur optimale $M*$ du problème relaché sans les contraintes de connexité nous donne aussi une borne supérieure de la solution du problème initiale. Cette borne fournit en pratique une aide très précieuse à Cplex qui n'est pas capable de génerer la coupe $\sum x_{i,j} \leq M* $.
+
+Par exemple, la résolution de l'instance \textit{projet 5 8 1} prend 13 secondes avec cette coupe, mais plus de 30 minutes sans cette coupe.
+
+
+Le tableau suivant donne les résultats obtenus par cette méthode sur les premières instances :
+
+\begin{figure}
+\centering
+\[
+\begin{array}{c|c|c|c}
+\text{Instance} & M* \text{(non conn.)} & \text{Res connexe }& \text{CPU time (s)} \\\hline
+projet 5 8 1 &24 & 24 & 0.356659\\ \hline
+projet 5 8 2 &4 & 4 & 0.184414\\ \hline
+projet 5 8 3 &30 & 30 & 0.644796\\ \hline
+projet 5 8 4 &18 & 18 & 1.04376\\ \hline
+projet 5 8 5 &40 & 40 & 0.08267\\ \hline
+projet 5 8 6 &23 & 23 & 0.219315\\ \hline
+projet 5 8 7 &30 & 30 & 13.5549\\ \hline
+projet 5 8 8 &28 & 28 & 14.762\\ \hline
+projet 5 8 9 &23 & 23 & 13.4261\\ \hline
+projet 5 8 10 &40 & 40 & 0.077614
+\end{array} \]
+
+Total simulation time : 44.3763s.
+\caption{Résolution directe avec arbre de connexité, sans Callback}
+\end{figure}
+
+
+\subsection{Ajouts successifs des contraintes de connexité}
+Afin de résoudre plus rapidement le problème, nous avons tenté, comme dans la résolution typique du voyageur de commerce, d'ajouter les contraintes de connexités décrites dans la partie 1 au fur et à mesure de la résolution du problème, en vérifiant le problème de "séparation" à chaque résolution.
+
+Cela se fait simplement en utilisant la méthode \textit{ILOLAZYCONSTRAINTCALLBACK} disponible dans l'API Cplex. Cependant, en pratique, cela n'amène pas à une résolution beaucoup plus rapide : beaucoup de contraintes doivent être ajoutées pour obtenir une solution connexe, et finalement, pour certaines instances, la résolution est plus longue que si l'on considère toutes les contraintes de connexité dès le départ.
+
+Cette méthode ne permet donc pas de résoudre les instances plus larges que 10x12.
+
+\subsection{Minimisation des bords}
+
+Nous avons également implémenté une méthode heuristique de minimisation des bords de la solution obtenue.
+
+La méthode consiste à introduire $(n+1) \cdot m + n\cdot (m+1) $ variables binaires supplémentaires $e^h_{i,j}$ et $e^v_{i,j}$ correspondant aux arêtes horizontales et verticales de chaque case du damier. La variable $e_{i,j}$ vaut 1 SSI elle définit un "bord" de la solution, ce qui se traduit par les contraintes: 
+\begin{align}
+e^h_{i,j}\geq x_{i,j} - x_{i-1,j} \\
+e^h_{i,j}\geq x_{i-1,j} - x_{i,j} \\
+e^v_{i,j}\geq x_{i,j} - x_{i,j-1} \\
+e^v_{i,j}\geq x_{i,j-1} - x_{i,j}
+\end{align}
+
+Comme une case sélectionnée dans la solution ``rajoute'' au plus deux bords, on utilise maintenant la fonction objectif :
+
+$$ \sum_{i,j} x_{i,j} - \alpha \sum_{i,j} \left( e^h_{i,j} + e^v_{i,j} \right)$$
+
+En pratique, nous avons pris $\alpha= 0.49$.
+Cette méthode permet une résolution assez rapide et optimale sur les premières instances, mais ne permet toujours pas d'obtenir la résolution exacte des instances 10x12 en général.
+
+Les résultats pour les premières instances sont regroupés dans le tableau suivant (figure \ref{tabMinEdges}).
+
+
+\begin{figure}
+\centering
+\[
+\begin{array}{c|c|c|c}
+\text{Instance} & M* \text{(non conn.)} & \text{Res connexe }& \text{CPU time (s)} \\\hline
+projet 5 8 1 &24 & 24 & 0.889101\\ \hline
+projet 5 8 2 &4 & 4 & 0.695555\\ \hline
+projet 5 8 3 &30 & 30 & 0.785902\\ \hline
+projet 5 8 4 &18 & 18 & 0.602633\\ \hline
+projet 5 8 5 &40 & 40 & 0.013569\\ \hline
+projet 5 8 6 &23 & 23 & 0.741241\\ \hline
+projet 5 8 7 &30 & 30 & 7.70596\\ \hline
+projet 5 8 8 &28 & 28 & 0.436938\\ \hline
+projet 5 8 9 &23 & 23 & 1.18512\\ \hline
+projet 5 8 10 &40 & 40 & 0.01264\\ \hline
+Total simulation time : 13.0807s.
+\caption{Résolution directe avec minimisation des bords.}
+\end{figure}
 
 \end{document}
