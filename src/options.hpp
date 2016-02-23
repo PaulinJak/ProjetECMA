@@ -1,21 +1,22 @@
 //options file
 #ifndef HPP_OPTIONS
 #define HPP_OPTIONS
+#include <string>
 
 using namespace std;
 
 class option{
 private :
-  string option_name;
-  string option_description;
+  std::string option_name;
+  std::string option_description;
 public :
-  string option_value;
+  std::string option_value;
   
-}
+};
 
 // Declare the supported options.
 void init(int argc, char* argv[]){
-
+  /*
 po::options_description desc("Allowed options");
 desc.add_options()
     ("help", "produce help message")
@@ -30,7 +31,7 @@ if (vm.count("help")) {
     cout << desc << "\n";
     }
 
-/*if (vm.count("instanceFile")) {
+if (vm.count("instanceFile")) {
     cout << "Instance input given by file" 
  << vm["instance"].as<string>() << ".\n";
 } else {

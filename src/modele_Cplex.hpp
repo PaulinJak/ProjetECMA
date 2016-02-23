@@ -29,11 +29,11 @@ setdata (IloModel& model,IloEnv env, instance_Cplex& instance,BoolVarMatrix  x, 
  //Connexity constraints
 
 void
-setConnexityConstraints(IloModel model,IloEnv env, instance_Cplex const& instance, BoolVarMatrix  x, BoolVarMatrix3 height, IloExprArray lhsCallback, IloNumArray rhsCallback,IloRangeArray connexityConstraintSet);
+setConnexityConstraints(IloModel model,IloEnv env, instance_Cplex const& instance, BoolVarMatrix  x, BoolVarMatrix3 height, IloExprArray lhsCallback, IloNumArray rhsCallback,IloRangeArray connexityConstraintSet,IloInt solutionUnconnex);
 
 
 void
-solveTreeConnexityConstraints (IloCplex cplex,IloModel model,IloEnv env, instance_Cplex const& instance, BoolVarMatrix  x, NumVarMatrix u,  NumVarMatrix v,IloNumVar y,IloNumVar z,bool useCallBack,IloInt hMax);
+solveTreeConnexityConstraints (IloCplex cplex,IloModel model,IloEnv env, instance_Cplex const& instance, BoolVarMatrix  x, NumVarMatrix u,  NumVarMatrix v,IloNumVar y,IloNumVar z,bool useCallBack,IloInt hMax,IloInt solutionUnconnex);
 
 
 void

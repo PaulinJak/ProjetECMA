@@ -1,5 +1,8 @@
 #include <ilcplex/ilocplex.h>
 
+#include <time.h>
+#include <fstream>
+
 #include "modele_Cplex.hpp"
 #include "instance_Cplex.hpp"
 #include "options.hpp"
@@ -9,24 +12,61 @@ ILOSTLBEGIN
 
 
 int main (int argc, char* argv[]) {
-   
- 
+
 
   //get instance fileName:
-  const char*  fileName;
-  if(argc>1)//we passed the filename in arg
+ std::string  instancePreName=  "projet_5_8_";
+ std::string  instanceFolder= "instances/instances_eleves/";
+ std::string  instanceExt =".dat";
+  //int instanceNum=1;
+
+ std::string Method ="connexityTree"; //connexityTree" or MinimizeEdges;
+
+
+ std::string temp  ="output_"+instancePreName+ Method+".out";
+ const char* outputFilename= temp.c_str();
+  std:: fstream outputStream;
+  outputStream.open(outputFilename,std::fstream::in | std::fstream::out | std::fstream::app);
+
+  outputStream<< "Nom instance & Res non connexe & Res connexe & CPU time \\\n";
+   
+ const clock_t simulation_begin_time = clock();
+
+
+
+  const char* fileName;
+
+  /*if(argc>1)//we passed the filename in arg
     fileName=argv[1];
-  else fileName = "instances/instances_eleves/projet_5_8_1.dat";
-  
+  else {
+    std::string temp=instanceFolder+std::string(instancePreName)+"1"+std::string(instanceExt);
+    fileName =temp.c_str();
+    }*/
+
+  for(int instanceNum=1; instanceNum<=10; instanceNum++){
+
+
+    stringstream ss;
+    ss << instanceNum;
+    std::string instanceNumString =  ss.str();
+    std::string temp=instanceFolder+instancePreName+instanceNumString+instanceExt;
+    fileName =temp.c_str();
+
+
   //DONNEES DE L INSTANCE
 
   typedef IloArray<IloNumArray> DataMatrix;
   IloEnv env;
   instance_Cplex instance ;
 
-  
+  outputStream<<instancePreName << instanceNum <<" &" ;
+
   getData(fileName,env,instance);
+
+  
   cout << "Données récupérées!\n";
+ const clock_t instance_begin_time = clock();
+
   
     int& n(instance.n);
   int& m(instance.m);
@@ -61,6 +101,7 @@ int main (int argc, char* argv[]) {
       IloInt solutionUnConnex;
       solutionUnConnex=cplex.getObjValue();
 
+      outputStream <<solutionUnConnex << " & ";
 
       DataMatrix xUnconnex(env,m) ; //Solution optimale non connexe
       for(int i=0;i<m;i++){
@@ -68,7 +109,6 @@ int main (int argc, char* argv[]) {
 	  cplex.getValues(xUnconnex[i], x[i]);
 	  }
       
-      std::string Method ="MinimizeEdges"; //connexityTree";
       if(Method=="connexityTree"){
       
 	//We solve a first time the model without the connexity constraints, to get a good max bound of the height max : the value of the solution/2, then we add the connexity constraints :
@@ -79,9 +119,9 @@ int main (int argc, char* argv[]) {
 	} //else we use our upper bound
 	else hMax=solutionUnConnex/2+1;//(n*m/2+n/2);
 
-	bool useCallBack=false;
+	bool useCallBack=true;
 	if(argc>3 && *argv[3]=='1')  useCallBack= true;
-	solveTreeConnexityConstraints(cplex,model,env,instance,x,u,v,y,z,useCallBack,hMax);
+	solveTreeConnexityConstraints(cplex,model,env,instance,x,u,v,y,z,useCallBack,hMax,solutionUnConnex);
       }
       
      else if(Method=="MinimizeEdges"){
@@ -94,13 +134,26 @@ int main (int argc, char* argv[]) {
 	  cout<<xUnconnex[i]<<endl;}
       
       env.out() << "Values  of x      = " << endl;
+      IloNum solutionConnexMin=0;
       for(int i=0;i<m;i++){
 	IloNumArray vals(env,n);
 	  cplex.getValues(vals, x[i]);
+	  solutionConnexMin+=IloSum(vals);
 	  cout<<vals<<endl;
       }
    
+      IloNum solutionConnex=cplex.getObjValue();
+       if(Method=="MinimizeEdges"){
+	 solutionConnex=solutionConnexMin;}
 
+      outputStream <<solutionConnex << " & ";
+      double instance_cpu_duration = (clock() - instance_begin_time) / (double)CLOCKS_PER_SEC;
+      outputStream <<  instance_cpu_duration <<"\\\n";
+
+
+
+
+ 
       /* env.out()<< "Value of y = "<< cplex.getValue(y)<<endl;
       // env.out()<< "Value of z = "<< cplex.getValue(z)<<endl;
 
@@ -135,7 +188,14 @@ int main (int argc, char* argv[]) {
       cerr << "Unknown exception caught" << endl;
       }
 
-   env.end();
+  } //end of instance treatment
+
+      double simul_cpu_duration = (clock() - simulation_begin_time) / (double)CLOCKS_PER_SEC;
+      outputStream << "Total simulation time : " << simul_cpu_duration<< "s.\n";
+
+      outputStream.close();
+
+ 
    return 0;
 
 }  

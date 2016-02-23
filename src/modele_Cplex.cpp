@@ -259,7 +259,7 @@ setdata (IloModel& model,IloEnv env, instance_Cplex& instance,BoolVarMatrix  x, 
  //Connexity constraints
 
 void
-setConnexityConstraints(IloModel model,IloEnv env,  instance_Cplex const& instance, BoolVarMatrix  x, BoolVarMatrix3 height, IloExprArray lhsCallback, IloNumArray rhsCallback,IloRangeArray connexityConstraintSet){
+setConnexityConstraints(IloModel model,IloEnv env,  instance_Cplex const& instance, BoolVarMatrix  x, BoolVarMatrix3 height, IloExprArray lhsCallback, IloNumArray rhsCallback,IloRangeArray connexityConstraintSet,IloInt solutionUnconnex){
 
    int n(instance.n);
   int m(instance.m);
@@ -268,13 +268,23 @@ setConnexityConstraints(IloModel model,IloEnv env,  instance_Cplex const& instan
  IloExpr sumH(env);
  for(int i=0; i<m; i++){
       for(int j=0; j<n; j++){ 
-	if((Ca[i][j]>0) && (Cp[i][j]>0)){ //on verifie que la case existe ici
+	if((instance.Ca[i][j]>0) && (instance.Cp[i][j]>0)){ //on verifie que la case existe ici
 	  sumH+= height[i][j][0];
 	}}}
  connexityConstraintSet.add(sumH==1);
  sumH.end();
 
  cout <<"Contrainte 11 ajoutée."<<endl;
+
+
+     //add cut from unconnex solution
+
+ IloExpr sumX(env);
+  for(int i=0; i<m; i++){
+      for(int j=0; j<n; j++){ 
+	sumX+=x[i][j];}}
+  connexityConstraintSet.add(sumX<=solutionUnconnex);
+
 
  //Contrainte (12) (n*m contraintes) seules les cases selectionées ont une hauteur, celles vides n'ont pas de hauteur
  for(int i=0; i<m; i++){
@@ -294,7 +304,7 @@ setConnexityConstraints(IloModel model,IloEnv env,  instance_Cplex const& instan
 
  for(int i=0; i<m; i++){
       for(int j=0; j<n; j++){ 
-	if((Ca[i][j]>0) && (Cp[i][j]>0)){
+	if((instance.Ca[i][j]>0) && (instance.Cp[i][j]>0)){
 	  for(int h=0;h<height[i][j].getSize()-1;h++){
 	    IloExpr lhsExprLijh(env);
 	    lhsExprLijh+=height[i][j][h+1];
@@ -334,7 +344,7 @@ ILOLAZYCONSTRAINTCALLBACK3(CtCallback, IloExprArray, lhsCallback, IloNumArray, r
 
 
 void
-solveTreeConnexityConstraints (IloCplex cplex,IloModel model,IloEnv env, instance_Cplex const& instance, BoolVarMatrix  x, NumVarMatrix u,  NumVarMatrix v,IloNumVar y,IloNumVar z,bool useCallBack,IloInt hMax)
+solveTreeConnexityConstraints (IloCplex cplex,IloModel model,IloEnv env, instance_Cplex const& instance, BoolVarMatrix  x, NumVarMatrix u,  NumVarMatrix v,IloNumVar y,IloNumVar z,bool useCallBack,IloInt hMax,IloInt solutionUnconnex)
 {      
 
     int  n(instance.n);
@@ -360,7 +370,7 @@ solveTreeConnexityConstraints (IloCplex cplex,IloModel model,IloEnv env, instanc
       IloExprArray lhsCallback(env);
       IloNumArray rhsCallback(env);
 
-      setConnexityConstraints(model,env,instance, x,height,lhsCallback,rhsCallback,connexityConstraintSet);
+      setConnexityConstraints(model,env,instance, x,height,lhsCallback,rhsCallback,connexityConstraintSet,solutionUnconnex);
       cout<< "\nContraintes de connexité ajoutées!\n\n";
       
 
@@ -380,6 +390,10 @@ solveTreeConnexityConstraints (IloCplex cplex,IloModel model,IloEnv env, instanc
 	      connexityConstraintSet.add(lhsCallback[i]<=0);
 	      	    }
       }
+      
+  
+
+      
       model.add(connexityConstraintSet);
       cplex.solve();
 
