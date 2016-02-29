@@ -203,7 +203,7 @@ solution voisinage1(solution s,bool* chgt,carte Ha,carte Hp,carte Ca,carte Cp,in
 		b=ss.exterieur[c].second;
 	}
 	//cout<<"a et b intialises a= "<<a<<" b= "<<b<<endl;
-	if(Cp[a][b]*Cp[a][b]!=0)//on permute si la case est possible
+	if(Cp[a][b]!=0&&Cp[a][b]!=0&&Hp[a][b]!=0&&Ha[a][b]!=0)//on permute si la case est possible
 	{
 		ss.z[a][b]=(ss.z[a][b]+1)%2;
 		*chgt=true;

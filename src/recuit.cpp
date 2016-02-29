@@ -196,7 +196,7 @@ solution initialisation(int n,int m)
 		vector<int> ligne;
 		for(int j=0;j<n;j++) 
 		{ 
-			if((Ha[i][j]+Hp[i][j]>=2)&&find==false&&Ca[i][j]!=0&&Cp[i][j]!=0)
+			if((Ha[i][j]+Hp[i][j]>=2)&&find==false&&Ca[i][j]!=0&&Cp[i][j]!=0&&Hp[i][j]!=0&&Ha[i][j]!=0)
 			{
 				ligne.push_back(1);
 				pair<int,int> p;
