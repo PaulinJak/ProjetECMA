@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>  
-
 #include "voisinage.h"
 #include <iostream>
 #include <fstream>
@@ -10,12 +9,16 @@
 #include <math.h>
 #include <algorithm>
 #include <sstream>
+
+#include "recuit.hpp"
 using namespace std;
 
 
 carte Ha,Hp,Ca,Cp;
 int n,m;
-void getData(ifstream& fichier) {
+
+
+void getData2(ifstream& fichier) {
 	char char1;
 	double tmp;
 	if(fichier) {
@@ -223,42 +226,12 @@ solution initialisation(int n,int m)
 	return sol;
 
 }
-int main ()
+
+
+void solve_Recuit(string instancePath, fstream& outputStream)
+		  //int r, float Tinit, float phi, int Kmax)
 {
-	time_t deb,fin;
-	double tps;
-  //get instance fileName:
- std::string  instancePreName=  "projet_";
- std::string  instanceFolder= "instances/instances_eleves/";
- std::string  instanceExt =".dat";
-  //int instanceNum=1;
-
-	string taille_instance;
-	string inputfileName;
-	string outputFilename;
-	string rep;
-	srand (time(NULL));
-	outputFilename=instanceFolder+"instance.txt";
-
-	cout<< "entrez taille de l'instance (eg 5_8):"<<endl;
-	cin>>taille_instance;
-	instancePreName=instancePreName+taille_instance;
-
-	srand (time(NULL));
-	outputFilename=instanceFolder+instancePreName+"_recuit.out";
-	
-	inputfileName=instanceFolder+instancePreName+"_";
-	ofstream sortie;
-	sortie.open(outputFilename, ios::out); 
-	/*cout<<"entrez nom du fichier resultat:"<<endl;
-	cin>>t;
-	rep="instances/instances_eleves/projet_";
-	t="a";*/
-	 std:: fstream outputStream;
-	 outputStream.open(outputFilename,std::fstream::in | std::fstream::out | std::fstream::app);
-
-	 outputStream<< "Nom instance  & Res connexe & CPU time \\\n";
-
+  
 
 		int r=100; //nombre d'itérations par palier de température
 		float Tinit=1000; //température
@@ -277,23 +250,14 @@ int main ()
 		cout<< "Choisissez un facteur de decroissance de la température phi:"<<endl;
 		cin>>phi;  }
 
-
- const clock_t simulation_begin_time = clock();
-
-
-  for(int instanceNum=1; instanceNum<=10; instanceNum++){
-
-    std::stringstream ss;
-    ss << instanceNum;
-    std::string instanceNumString =  ss.str();
-
-  outputStream<<instancePreName << instanceNum <<" &" ;
-  cout<< "Chemin de l'instance lue : \n" <<inputfileName+instanceNumString+instanceExt ;
-	ifstream fichier(inputfileName+instanceNumString+instanceExt, ios::in); 
+		time_t deb,fin;
+		double tps;
+		ofstream sortie(instancePath+"\r\r\rout", ios::app);
 		//lecture du fichier de données
-		getData(fichier);
+		ifstream inputInstance(instancePath,ios::in);
+		getData2(inputInstance);
 		 const clock_t instance_begin_time = clock();
-
+		 deb=time(NULL);
 	       	//Calcul de la solution initiale
 		solution Sinit=initialisation(n,m);
 		
@@ -302,7 +266,6 @@ int main ()
 		//tps=difftime(fin,deb);
 
 		solution  Srecuit;
-		deb=time(NULL);
 		Srecuit=recuit(Sinit,sortie,r,Tinit,phi,Kmax);
 		fin=time(NULL);
 		tps=difftime(fin,deb);
@@ -314,12 +277,6 @@ int main ()
 		outputStream <<Srecuit.taille << " & ";
 		double instance_cpu_duration = (clock() - instance_begin_time) / (double)CLOCKS_PER_SEC;
 		outputStream <<  instance_cpu_duration <<"\\\n";
-  } // end of instance loop
-
-  double simul_cpu_duration = (clock() - simulation_begin_time) / (double)CLOCKS_PER_SEC;
-  outputStream << "Total simulation time : " << simul_cpu_duration<< "s.\n";
-
-  outputStream.close();
 
 	}
 			

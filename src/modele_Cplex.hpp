@@ -9,7 +9,6 @@
 
 ILOSTLBEGIN
 
-
 typedef IloArray<IloNumArray> DataMatrix;
 
 typedef IloArray<IloBoolVarArray> BoolVarMatrix;
@@ -17,8 +16,12 @@ typedef IloArray<IloNumVarArray> NumVarMatrix;
 
 //matrice à 3 dim pour les hauteurs:
 typedef IloArray<BoolVarMatrix> BoolVarMatrix3;
- 
-void getData(const char* nom_fichier,IloEnv env,instance_Cplex& instance);
+
+
+void solve_Cplex(string fileName, fstream& outputStream,int Method);
+
+
+void getIloData(string nom_fichier,IloEnv env,instance_Cplex& instance);
 
 
 
