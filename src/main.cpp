@@ -13,9 +13,13 @@ int main (int argc, char* argv[]) {
 
 
   //get instance fileName:
- std::string  instancePreName=  "projet_5_8_";
  std::string  instanceFolder= "instances/instances_eleves/";
+ std::string  outputFolder= "instances/output/";
  std::string  instanceExt =".dat";
+std::string taille_instance;
+cout<< "Donner taille des instances a traiter (e.g. 5_8_):\n";
+cin >>taille_instance;
+ std::string  instancePreName=  "projet_"+taille_instance;
   //int instanceNum=1;
 
  int Method =0;
@@ -23,16 +27,18 @@ int main (int argc, char* argv[]) {
 
  cin >>Method ;//connexityTree" or MinimizeEdges;
 
- string taille_instance;
+cout<<"Methode choisie:"<<to_string(Method) <<".\n";
+RecuitParams recuitParams(0,0,0,0);
+if(Method==3){ //recuit
+recuitParams.set_params();}
+
  string inputfileName;
- string outputFilename;
  string rep;
  srand (time(NULL));
- outputFilename=instanceFolder+"instance.txt";
 
- std::string temp  ="output_"+instancePreName+ to_string(Method)+".out";
+ string outputFilename =outputFolder+instancePreName+"Method"+ to_string(Method)+".out";
   std:: fstream outputStream;
-  outputStream.open(outputFilename,std::fstream::in); // | std::fstream::out | std::fstream::app);
+  outputStream.open(outputFilename,std::fstream::in | std::fstream::out | std::fstream::app);
 
   outputStream<< "Nom instance & Res non connexe & Res connexe & CPU time \\\n";
    
@@ -40,14 +46,14 @@ int main (int argc, char* argv[]) {
  std::string fileName;
 
 
-  for(int instanceNum=1; instanceNum<=10; instanceNum++){
+  for(int instanceNum=2; instanceNum<=2; instanceNum++){
 
-    
+  
     std::string instanceNumString =  to_string(instanceNum);
     fileName=instanceFolder+instancePreName+instanceNumString+instanceExt;
 
       outputStream<<instancePreName << instanceNum <<" &" ;
-
+cout<< "\nTraitement de l'instance " + instanceNumString <<":\n\n";
     switch(Method)
       {
       case 0:
@@ -59,9 +65,9 @@ int main (int argc, char* argv[]) {
       case 2:
 	solve_Cplex(fileName,outputStream,Method);
 	break;
-      case 3:
-	solve_Recuit(fileName,outputStream);
-	break;
+ case 3:
+solve_Recuit(fileName,outputStream,recuitParams);
+break;
       default:
 	cout <<"No or incorrect method number given!\n";
       }
