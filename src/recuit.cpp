@@ -14,20 +14,43 @@
 using namespace std;
 
 
-carte Ha,Hp,Ca,Cp;
-int n,m;
+void RecuitParams::set_params(){
+  int r=100; //nombre d'itérations par palier de température
+		float Tinit=1000; //température
+		float phi=0.8;//facteur de décroissance
+		int Kmax=100;//nombre de paliers de température
+		bool changeParams =false;
+		cout << "Parametres par défaut : r= " <<r <<", Tinit="<< Tinit <<", phi="<<phi<<", Kmax=" <<Kmax << ".\nChanger les parametres ? (0/1)?\n";
+		cin >>changeParams;
+		if(changeParams){
+		cout<< "Choisissez une temperature initiale Tinit:"<<endl;
+		cin>>Tinit;
+		set_Tinit(Tinit);
+		cout<< "Choisissez un nombre de paliers de temperature Kmax:"<<endl;
+		cin>>Kmax;
+		set_Kmax(Kmax);
+		cout<< "Choisissez le nombre d'iterations sur un meme palier r:"<<endl;
+		cin>>r;
+		set_r(r);
+		cout<< "Choisissez un facteur de decroissance de la température phi:"<<endl;
+		cin>>phi;
+		set_phi(phi);}
 
-
-void getData2(ifstream& fichier) {
-	char char1;
+}
+void getData2(ifstream& fichier,Instance& instance) {
+  carte Ha,Hp,Ca,Cp;
+  	int n,m;
+        char char1;
 	double tmp;
 	if(fichier) {
 		//pour n
 		fichier >> char1 >> char1 >> n >> char1;
 		cout <<"n="<< n<<"\n";
+		instance.n=n;
 		//pour m
 		fichier >> char1 >> char1 >> m >>char1;
 		cout <<"m="<< m<<"\n";
+		instance.m=m;
 		int Ba,Bp;
 		//pour Ba, si existe!
 		fichier >> char1 ;
@@ -120,45 +143,57 @@ void getData2(ifstream& fichier) {
 		}
 		fichier >> char1; //lit ; a la fin du tableau
 		displayData(Ca,n,m);
-
+		instance.Ca=Ca;
+		instance.Cp=Cp;
+		instance.Ha=Ha;
+		instance.Hp=Hp;
 		fichier.close();
 	}
 }
-solution voisinage(solution s)
+
+solution voisinage(solution s,Instance& instance)
 {
 	bool chgt=false;
 	solution svoisin=s;
 	int compteur=0;
 	while(chgt==false&&compteur<20){
 	chgt=false;
-	svoisin=voisinage1(s,&chgt,Ha,Hp,Ca,Cp,n,m);
+	svoisin=voisinage1(s,&chgt,instance);
 	compteur++;
 	}
 	return svoisin;
 }
-solution recuit(solution& init,ofstream& sortie,int r,float Tinit,float phi,int Kmax)
+solution recuit(solution& init,ofstream& sortie,RecuitParams recuitParams, Instance& instance)
 {
+
+  carte Ha=instance.Ha;
+  carte Hp=instance.Hp;
+  carte Ca=instance.Ca;
+  carte Cp=instance.Cp;
 	//paramètres
 	time_t tic,tac;
 	double tps;
 	solution max=init;
 	solution s=init;
 	solution ss=init;
-	float T=Tinit;
+	float T=recuitParams.Tinit_p;
 	int K=0;
+	int Kmax=recuitParams.Kmax_p;
+	  int r=recuitParams.r_p;
+	  float phi=recuitParams.phi_p;
 	float delta;
 	float q;
 	float e;
 	sortie<<"Paramètres"<<endl;
-	sortie<<"Tinit = "<<Tinit<<endl<<"phi ="<<phi<<endl;
-	sortie<<"Kmax = "<<Kmax<<endl<<"r = "<<r<<endl;
+	sortie<<"Tinit = "<<T<<endl<<"phi ="<<recuitParams.phi_p<<endl;
+	sortie<<"Kmax = "<<recuitParams.Kmax_p<<endl<<"r = "<<recuitParams.r_p<<endl;
 	while(K<Kmax)
 	{
 		tic=time(NULL);
 		for(int nbIter=0;nbIter<r;nbIter++)
 		{
 			//on tire au sort une solution s'
-			ss=voisinage(s);
+		  ss=voisinage(s,instance);
 			//cout<<"quotient de la solution "<<ss.quotient<<endl;
 			//display(ss.z,n,m);
 			delta=ss.taille-s.taille;
@@ -192,8 +227,14 @@ solution recuit(solution& init,ofstream& sortie,int r,float Tinit,float phi,int 
 	}
 	return max;
 }
-solution initialisation(int n,int m)
+solution initialisation(Instance& instance)
 {
+    int n= instance.n;
+  int m=instance.m;
+  carte Ha=instance.Ha;
+  carte Hp=instance.Hp;
+  carte Ca=instance.Ca;
+  carte Cp=instance.Cp;
 	solution sol;
 	bool find=false;
 	for(int i=0;i<m;i++){
@@ -228,50 +269,34 @@ solution initialisation(int n,int m)
 }
 
 
-void solve_Recuit(string instancePath, fstream& outputStream)
-		  //int r, float Tinit, float phi, int Kmax)
-{
-  
-
-		int r=100; //nombre d'itérations par palier de température
-		float Tinit=1000; //température
-		float phi=0.8;//facteur de décroissance
-		int Kmax=100;//nombre de paliers de température
-		bool changeParams =false;
-		cout << "Parametres par défaut : Tinit="<< Tinit <<", phi="<<phi<<", Kmax=" <<Kmax << ".\nChanger les parametres ? (0/1)?\n";
-		cin >>changeParams;
-		if(changeParams){
-		cout<< "Choisissez une temperature initiale Tinit:"<<endl;
-		cin>>Tinit;
-		cout<< "Choisissez un nombre de paliers de temperature Kmax:"<<endl;
-		cin>>Kmax;
-		cout<< "Choisissez le nombre d'iterations sur un meme palier r:"<<endl;
-		cin>>r;
-		cout<< "Choisissez un facteur de decroissance de la température phi:"<<endl;
-		cin>>phi;  }
-
-		time_t deb,fin;
+void solve_Recuit(string instancePath, fstream& outputStream,RecuitParams params)
+	      {                      
+	
+	        time_t deb,fin;
 		double tps;
+		
 		ofstream sortie(instancePath+"\r\r\rout", ios::app);
 		//lecture du fichier de données
+		Instance instance;
 		ifstream inputInstance(instancePath,ios::in);
-		getData2(inputInstance);
-		 const clock_t instance_begin_time = clock();
+		getData2(inputInstance,instance);
+		
+		const clock_t instance_begin_time = clock();
 		 deb=time(NULL);
 	       	//Calcul de la solution initiale
-		solution Sinit=initialisation(n,m);
+		solution Sinit=initialisation(instance);
 		
 		//zone Sinit=initialisation(n,m);
 		//Calcul de la solution par recuit simulé
 		//tps=difftime(fin,deb);
 
 		solution  Srecuit;
-		Srecuit=recuit(Sinit,sortie,r,Tinit,phi,Kmax);
+		Srecuit=recuit(Sinit,sortie,params,instance);
 		fin=time(NULL);
 		tps=difftime(fin,deb);
 		//sortie<<"Valeur finale de la solution par recuit simulé = "<<Srecuit.z<<endl;
 		sortie<<"Temps d'éxécution total = "<<tps;
-		display(Srecuit.z,n,m);
+		display(Srecuit.z,instance.n,instance.m);
 		cout<<"valeur "<<Srecuit.taille<<endl;
 		cout<<"quotient "<<Srecuit.quotient<<endl;
 		outputStream <<Srecuit.taille << " & ";
