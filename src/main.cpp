@@ -1,5 +1,5 @@
 #include <ilcplex/ilocplex.h>
-
+#include <string>
 #include <time.h>
 #include <fstream>
 #include <iostream>
@@ -27,7 +27,7 @@ cin >>taille_instance;
 
  cin >>Method ;//connexityTree" or MinimizeEdges;
 
-cout<<"Methode choisie:"<<to_string(Method) <<".\n";
+cout<<"Methode choisie:"<<Method <<".\n";
 RecuitParams recuitParams(0,0,0,0);
 if(Method==3){ //recuit
 recuitParams.set_params();}
@@ -35,8 +35,9 @@ recuitParams.set_params();}
  string inputfileName;
  string rep;
  srand (time(NULL));
-
- string outputFilename =outputFolder+instancePreName+"Method"+ to_string(Method)+".out";
+ std::ostringstream ostr;
+ ostr<<Method;
+ string outputFilename =outputFolder+instancePreName+"Method"+ ostr.str()+".out";
   std:: fstream outputStream;
   outputStream.open(outputFilename,std::fstream::in | std::fstream::out | std::fstream::app);
 
@@ -48,8 +49,9 @@ recuitParams.set_params();}
 
   for(int instanceNum=2; instanceNum<=2; instanceNum++){
 
-  
-    std::string instanceNumString =  to_string(instanceNum);
+  std::ostringstream ostr2;
+ ostr2<<instanceNum;
+    std::string instanceNumString =  ostr2.str();
     fileName=instanceFolder+instancePreName+instanceNumString+instanceExt;
 
       outputStream<<instancePreName << instanceNum <<" &" ;

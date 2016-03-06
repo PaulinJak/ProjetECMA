@@ -68,7 +68,7 @@ void solve_Cplex(string fileName, fstream& outputStream,int Method){
 	  cplex.getValues(xUnconnex[i], x[i]);
 	  }
       
-      if((Method==0)or (Method==1)){
+      if((Method==0) || (Method==1)){
       
 	//We solve a first time the model without the connexity constraints, to get a good max bound of the height max : the value of the solution/2, then we add the connexity constraints :
 	
