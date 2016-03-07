@@ -46,7 +46,7 @@ recuitParams.set_params();}
  std::string fileName;
 
 
-  for(int instanceNum=2; instanceNum<=2; instanceNum++){
+  for(int instanceNum=1; instanceNum<=10; instanceNum++){
 
   
     std::string instanceNumString =  to_string(instanceNum);
