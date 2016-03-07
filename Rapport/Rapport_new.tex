@@ -230,6 +230,7 @@ Les résultats pour les premières instances sont regroupés dans le tableau sui
 
 \begin{figure}
 \centering
+
 \[
 \begin{array}{c|c|c|c}
 \text{Instance} & M* \text{(non conn.)} & \text{Res connexe }& \text{CPU time (s)} \\\hline
@@ -243,8 +244,31 @@ projet 5 8 7 &30 & 30 & 7.70596\\ \hline
 projet 5 8 8 &28 & 28 & 0.436938\\ \hline
 projet 5 8 9 &23 & 23 & 1.18512\\ \hline
 projet 5 8 10 &40 & 40 & 0.01264\\ \hline
+\end{array}\]
 Total simulation time : 13.0807s.
 \caption{Résolution directe avec minimisation des bords.}
 \end{figure}
 
+
+\section{Recuit simulé}
+
+\begin{figure}
+
+\[
+\begin{array}{c|c|c}
+\text{Instance}  & \text{Res connexe }& \text{CPU time (s)} \\\hline
+projet 5 8 1 &6 & 0.318407\\ \hline
+projet 5 8 2 &8 & 0.292096\\ \hline
+projet 5 8 3 &6 & 0.305424\\ \hline
+projet 5 8 4 &2 & 0.31873\\ \hline
+projet 5 8 5 &5 & 0.33544\\ \hline
+projet 5 8 6 &4 & 0.350814\\ \hline
+projet 5 8 7 &11 & 0.4087\\ \hline
+projet 5 8 8 &13 & 0.377613\\ \hline
+projet 5 8 9 &10 & 0.453874\\ \hline
+projet 5 8 10 &10 & 0.481857\\ \hline
+\end{array}\]
+Total simulation time : 3.64709s.
+\caption{Recuit.}
+\end{figure}
 \end{document}
