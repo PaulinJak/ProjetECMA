@@ -1,4 +1,11 @@
 \contentsline {section}{\numberline {1}Mod\IeC {\`e}le math\IeC {\'e}matique}{2}
-\contentsline {paragraph}{Exercice 1\\}{2}
-\contentsline {paragraph}{Exercice 2\\}{3}
+\contentsline {subsection}{\numberline {1.1}Ex.1 : \IeC {\'e}criture d'un programme lin\IeC {\'e}aire}{2}
+\contentsline {subsection}{\numberline {1.2}Ex.2 : mod\IeC {\'e}lisation de la connexit\IeC {\'e} }{3}
 \contentsline {section}{\numberline {2}R\IeC {\'e}solution directe}{4}
+\contentsline {subsection}{\numberline {2.1}R\IeC {\'e}solution frontale et borne}{4}
+\contentsline {subsection}{\numberline {2.2}Ajouts successifs des contraintes de connexit\IeC {\'e}}{5}
+\contentsline {subsection}{\numberline {2.3}Minimisation des bords}{6}
+\contentsline {section}{\numberline {3}R\IeC {\'e}solution par recuit simul\IeC {\'e}}{7}
+\contentsline {subsection}{\numberline {3.1}Pr\IeC {\'e}sentation de l'algorithme}{7}
+\contentsline {subsection}{\numberline {3.2}Description des voisinages utilis\IeC {\'e}s}{8}
+\contentsline {subsection}{\numberline {3.3}R\IeC {\'e}sultats obtenus}{9}

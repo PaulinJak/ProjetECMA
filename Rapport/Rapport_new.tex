@@ -15,7 +15,8 @@
 %\usepackage{algpseudocode}
 \usepackage{setspace}
 \usepackage[textfont={it}]{caption}
-
+\usepackage{alg}
+\usepackage{algorithmic}
 %%% Environnement bigcenter : permet de centrer des images plus larges que \linewidth %%%
 \makeatletter
 \newskip\@bigflushglue \@bigflushglue = -100pt plus 1fil
@@ -228,7 +229,7 @@ Cette méthode permet une résolution assez rapide et optimale sur les première
 Les résultats pour les premières instances sont regroupés dans le tableau suivant (figure \ref{tabMinEdges}).
 
 
-\begin{figure}
+\begin{figure}[H]
 \centering
 
 \[
@@ -246,29 +247,55 @@ projet 5 8 9 &23 & 23 & 1.18512\\ \hline
 projet 5 8 10 &40 & 40 & 0.01264\\ \hline
 \end{array}\]
 Total simulation time : 13.0807s.
+\end{array}
+\]
+\label{tabMinEdges}
 \caption{Résolution directe avec minimisation des bords.}
 \end{figure}
 
 
-\section{Recuit simulé}
+\section{Résolution par recuit simulé}
+\subsection{Présentation de l'algorithme}
+Le recuit simulé est une métaheuristique assez courante mais efficace même si la paramétrisation peut se révéler difficile.\\
+Dans l'implémentation de l'algorithme, nous avons choisi de n'examiner que les solutions connexes car construire une solution connexe est difficile. Les fonctions de voisinages sont donc implémentées pour ne générer que des solutions connexes.\\ 
+Par contre, on accepte de considérer les solutions ne respectant la contrainte fractionnaire liée au relief (voir la description du problème dans la première partie contrainte \ref{critere}).
 
-\begin{figure}
-
-\[
-\begin{array}{c|c|c}
-\text{Instance}  & \text{Res connexe }& \text{CPU time (s)} \\\hline
-projet 5 8 1 &6 & 0.318407\\ \hline
-projet 5 8 2 &8 & 0.292096\\ \hline
-projet 5 8 3 &6 & 0.305424\\ \hline
-projet 5 8 4 &2 & 0.31873\\ \hline
-projet 5 8 5 &5 & 0.33544\\ \hline
-projet 5 8 6 &4 & 0.350814\\ \hline
-projet 5 8 7 &11 & 0.4087\\ \hline
-projet 5 8 8 &13 & 0.377613\\ \hline
-projet 5 8 9 &10 & 0.453874\\ \hline
-projet 5 8 10 &10 & 0.481857\\ \hline
-\end{array}\]
-Total simulation time : 3.64709s.
-\caption{Recuit.}
-\end{figure}
+Voici l'algorithme du recuit simulé:
+\begin{algorithm}
+	\caption{Algorithme du recuit}
+	\begin{algorithmic}[1]
+		\STATE Soit x une solution initiale.
+		\STATE $x_{max} \gets x$
+		\STATE $T\gets T_{init}$
+		\FOR{k allant de 0 à $K_{max}$}
+		\FOR{r allant de 0 à $R_{max}$}
+		\STATE Générer une solution x' dans le voisinage de la solution courante x de manière aléatoire
+		\STATE Reconstruire une solution admissible à partir de x'.
+		\IF{$f(x')>f(x)$}
+		\STATE $x gets x'$
+		\STATE Soit f la fonction objectif.
+		\IF{$f(x')>f(x_{max})$}
+		\STATE $x_{max} \gets x'$
+		\ENDIF
+		\ELSE
+		\STATE On tire q un nombre aléatoire.
+		\STATE $e\gets \exp{\frac{f(x')-f(x)}{T}}$
+		\IF {$q<e$}
+		\STATE $x \gets x'$
+		\ENDIF
+		\ENDIF
+		\ENDFOR
+		\STATE $T\gets T*\phi$
+		\IF{aucun changement de maximum à cette itération}
+		\STATE break
+		\ENDIF
+		\ENDFOR
+	\end{algorithmic}
+\end{algorithm}
+\subsection{Description des voisinages utilisés}
+En plus du choix des paramètres, le voisinage utilisé influence l'efficacité de l'algorithme. La première idée a été de créer un voisinage constitué de toutes les solutions différant de 1 par rapport à la solution initiale et de l'évaluer si la solution obtenue était connexe. Cette solution n'est pas idéale dans le cas où il y a peu de cases dont la valeur puisse être changée tout en gardant la connexité de la solution.\\
+La fonction de voisinage implémentée commence donc par voir si on peut ajouter à la solution une case dont la somme des coefficients $H-a[i][j]+H_p[i][j]>=2$. Si oui, la solution est générée en ajoutant toutes les cases répondant à ce critère. Si ce n'est pas le cas, l'algorithme tire au hasard une des cases parmi celles à 1 dans la solution d'origine et les voisines de celles-ci. Si la solution obtenue en changeant la valeur de la case tirée au sort est connexe alors la fonction de voisinage renvoie la solution obtenue. Sinon elle tire au sort une autre case.
+\subsection{Résultats obtenus}
+L'algorithme est assez efficace et trouve une bonne solution en moins de quelques secondes pour les petites instances et en moins de 2 minutes pour les plus grandes même s'il ne trouve pas toujours le maximum.\\
+>>>>>>> 7d56ca5b611a2f669dd91804db5a120731aad5fb
 \end{document}
