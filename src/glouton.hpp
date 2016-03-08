@@ -11,17 +11,31 @@
 #include "recuit.hpp"
 
 class SimpleSolution{
+private:
+  int n;
+  int m;
+  float numa;
+  float nump;
+  float denoma;
+  float denomp;
 public:
-int n;
-int m;
-zone valeurs;
-float quotient;
-float taille;
-SimpleSolution(Instance& instance);
-void computeQuotient(Instance& instance);
+  zone valeurs;
+  vector<pair<int,int> > exterieur;
+  float quotient;
+  float taille;
+  SimpleSolution(Instance& instance);
+  void updateExterieur(int i, int j);
+  void updateQuotient(int i, int j, Instance& instance);
+  void computeQuotient(Instance& instance);
+  void addCase(int i, int j,Instance& instance);
+  void print();
 };
 
-void printSolutions( vector< SimpleSolution> const& sols);
+void updateExtVector(vector<pair<int,int> >& extVector,zone& valeurs,int m, int n,int i, int j);
+
+void extendInitialSol(SimpleSolution& newsol, zone& caseChecked);
+
+void printSolutions( vector< SimpleSolution>& sols);
 
 vector< SimpleSolution> findTrivialSolutions(Instance& instance);
 void solve_Glouton(string instancePath, fstream& outputStream);
