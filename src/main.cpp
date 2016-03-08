@@ -7,7 +7,7 @@
 #include "instance_Cplex.hpp"
 #include "recuit.hpp"
 #include "options.hpp"
-
+#include "glouton.hpp"
 
 int main (int argc, char* argv[]) {
 
@@ -22,8 +22,12 @@ cin >>taille_instance;
  std::string  instancePreName=  "projet_"+taille_instance;
   //int instanceNum=1;
 
+ int num_instance;
+ cout <<"Donner numéro instance à traiter, ou 0 pour traiter toutes les instances " << taille_instance <<" :\n";
+ cin>>num_instance;
+
  int Method =0;
- cout<<" Choisir méthode de résolution :\n 0. directe CPlex (connexity tree) \n 1.Cplex+ Callback (connexity tree)\n 2.Cplex+MinimizeEdges\n 3. Recuit simulé\n" ;
+ cout<<" Choisir méthode de résolution :\n 0. directe CPlex (connexity tree) \n 1.Cplex+ Callback (connexity tree)\n 2.Cplex+MinimizeEdges\n 3. Recuit simulé\n 4. Glouton" ;
 
  cin >>Method ;//connexityTree" or MinimizeEdges;
 
@@ -46,8 +50,12 @@ recuitParams.set_params();}
  const clock_t simulation_begin_time = clock();
  std::string fileName;
 
-
-  for(int instanceNum=1; instanceNum<=10; instanceNum++){
+ int minInst=1, maxInst=10;
+ if(num_instance!=0){
+   minInst=num_instance;
+   maxInst=num_instance;
+ }
+  for(int instanceNum=minInst; instanceNum<=maxInst; instanceNum++){
 
   std::ostringstream ostr2;
  ostr2<<instanceNum;
@@ -67,9 +75,12 @@ cout<< "\nTraitement de l'instance " + instanceNumString <<":\n\n";
       case 2:
 	solve_Cplex(fileName,outputStream,Method);
 	break;
- case 3:
-solve_Recuit(fileName,outputStream,recuitParams);
-break;
+      case 3:
+	solve_Recuit(fileName,outputStream,recuitParams);
+	break;
+      case 4:
+	solve_Glouton(fileName,outputStream);
+	break; 
       default:
 	cout <<"No or incorrect method number given!\n";
       }
