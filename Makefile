@@ -78,13 +78,13 @@ LINK     := g++
 all : ECMA
 
 
-ECMA: main.o  modele_Cplex.o  options.o recuit.o voisinage.o
-	$(LINK) $(LDDIRS) -o ECMA main.o modele_Cplex.o recuit.o voisinage.o $(LDFLAGS) -lm $(CXXFLAGS) 
+ECMA: main.o  modele_Cplex.o  options.o recuit.o voisinage.o genetique.o glouton.o
+	$(LINK) $(LDDIRS) -o ECMA main.o modele_Cplex.o recuit.o voisinage.o genetique.o glouton.o $(LDFLAGS) -lm $(CXXFLAGS) 
 
 options.o: src/options.hpp
 	$(CCXX) $(LDDIRS)  src/options.cpp -o  options.o $(LDFLAGS) -lm $(CXXFLAGS) 
 
-main.o : src/main.cpp src/modele_Cplex.hpp src/instance_Cplex.hpp src/recuit.hpp
+main.o : src/main.cpp src/modele_Cplex.hpp src/instance_Cplex.hpp src/recuit.hpp src/genetique.hpp
 	$(CCXX) $(LDDIRS) src/main.cpp -o main.o  $(LDFLAGS) -lm $(CXXFLAGS) 
 
 modele_Cplex.o: src/modele_Cplex.cpp  src/modele_Cplex.hpp src/instance_Cplex.hpp  #src/options.hpp
@@ -95,6 +95,13 @@ recuit.o : src/recuit.cpp src/recuit.hpp src/voisinage.h
 
 voisinage.o : src/voisinage.cpp src/voisinage.h
 	$(CCXX) $(LDDIRS) -o voisinage.o src/voisinage.cpp $(LDFLAGS) -lm $(CXXFLAGS)
+
+genetique.o :  src/genetique.cpp src/genetique.hpp
+	$(CCXX) $(LDDIRS) -o genetique.o src/genetique.cpp $(LDFLAGS) -lm $(CXXFLAGS)
+
+genetique.o :  src/glouton.cpp src/glouton.hpp
+	$(CCXX) $(LDDIRS) -o glouton.o src/glouton.cpp $(LDFLAGS) -lm $(CXXFLAGS)
+
 
 
 clean:
