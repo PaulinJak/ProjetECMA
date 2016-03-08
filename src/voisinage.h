@@ -29,7 +29,7 @@ bool frontiere(zone sol,int a,int b,int n,int m);
 zone arbre(zone graphe, int x, int y,int n,int m);
 bool connexite(zone sol,int n,int m);
 vector<pair<int,int> > voisins(int x,int y,int n,int m);
-float admissible(zone s, carte Ha, carte Ca, carte Hp, carte Cp,int n,int m);
+float admissible(zone s, Instance& instance);
 float score(zone s,int n,int m);
 solution voisinage1(solution s,bool* chgt,Instance& instance);
 

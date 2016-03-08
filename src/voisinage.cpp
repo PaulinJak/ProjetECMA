@@ -150,20 +150,20 @@ vector<pair<int,int> > voisins(int a,int b,int n,int m)
 	}
 	return v;
 }
-float admissible(zone s, carte Ha, carte Ca, carte Hp, carte Cp,int n,int m)
+float admissible(zone s, Instance& instance)
 {
 	float numa=0;
 	float nump=0;
 	float denoma=0;
 	float denomp=0;
-	for(int i=0;i<m;i++)
+	for(int i=0;i<instance.m;i++)
 	{
-		for(int j=0;j<n;j++)
+		for(int j=0;j<instance.n;j++)
 		{
-			numa=numa+Ha[i][j]*Ca[i][j]*s[i][j];
-			nump=nump+Hp[i][j]*Cp[i][j]*s[i][j];
-			denoma=denoma+Ca[i][j]*s[i][j];
-			denomp=denomp+Cp[i][j]*s[i][j];
+			numa=numa+instance.Ha[i][j]*instance.Ca[i][j]*s[i][j];
+			nump=nump+instance.Hp[i][j]*instance.Cp[i][j]*s[i][j];
+			denoma=denoma+instance.Ca[i][j]*s[i][j];
+			denomp=denomp+instance.Cp[i][j]*s[i][j];
 		}
 	}
 	return (numa/denoma)+(nump/denomp);
@@ -225,7 +225,7 @@ solution voisinage1(solution s,bool* chgt,Instance& instance)
 				//on met a jour l'exterieur et l'interieur
 				vector<pair<int,int> > casesVoisines=voisins(a,b,n,m);
 				int x,y;
-				for(int i=0;i<casesVoisines.size();i++)
+				for(unsigned int i=0;i<casesVoisines.size();i++)
 				{
 					x=casesVoisines[i].first;
 					y=casesVoisines[i].second;
@@ -234,7 +234,7 @@ solution voisinage1(solution s,bool* chgt,Instance& instance)
 					{
 						vector<pair<int,int> > v_xy=voisins(x,y,n,m);
 						int compteur=0;
-						for(int j=0;j<v_xy.size();j++)
+						for(unsigned int j=0;j<v_xy.size();j++)
 						{
 							//cout<<"acces case voisine (x,y) i= "<<v_xy[i].first<<" j= "<<v_xy[i].second<<endl;
 							if(ss.z[v_xy[j].first][v_xy[j].second]==1)
@@ -243,7 +243,7 @@ solution voisinage1(solution s,bool* chgt,Instance& instance)
 						if(compteur==0)
 							//la case n'a plus de voisins dans la solution donc elle ne fait plus partie de l'exterieur
 						{
-							for(int j=0;j<ss.exterieur.size();j++)
+							for(unsigned int j=0;j<ss.exterieur.size();j++)
 							{
 								if(ss.exterieur[j].first==x&&ss.exterieur[j].second==y)
 								{
@@ -256,7 +256,7 @@ solution voisinage1(solution s,bool* chgt,Instance& instance)
 					}
 				}
 				//on passe la case dont on a change la valeur de interieur vers exterieur
-				for(int j=0;j<ss.interieur.size();j++)
+				for(unsigned int j=0;j<ss.interieur.size();j++)
 				{
 					if(ss.interieur[j].first==a&&ss.interieur[j].second==b)
 					{
@@ -281,13 +281,13 @@ solution voisinage1(solution s,bool* chgt,Instance& instance)
 		else//ss.z[a][b]==1
 		{
 			vector<pair<int,int> > v=voisins(a,b,n,m);
-			for(int i=0;i<v.size();i++)
+			for(unsigned int i=0;i<v.size();i++)
 			{
 				//cout<<"acces case voisin (a,b) x= "<<v[i].first<<" y= "<<v[i].second<<endl;
 				if(ss.z[v[i].first][v[i].second]==0)//on verifie que la case est sur l'exterieur sinon on l'ajoute
 				{
 					bool find=false;
-					for(int j=0;j<ss.exterieur.size();j++)
+					for(unsigned int j=0;j<ss.exterieur.size();j++)
 					{
 						if(ss.exterieur[j].first==v[i].first&&ss.exterieur[j].second==v[i].second)
 						{
@@ -299,7 +299,7 @@ solution voisinage1(solution s,bool* chgt,Instance& instance)
 						ss.exterieur.push_back(v[i]);
 				}
 			}
-			for(int j=0;j<ss.exterieur.size();j++)
+			for(unsigned int j=0;j<ss.exterieur.size();j++)
 				{
 					if(ss.exterieur[j].first==a&&ss.exterieur[j].second==b)
 					{
@@ -316,7 +316,7 @@ solution voisinage1(solution s,bool* chgt,Instance& instance)
 	}
 	else
 		*chgt=false;
-	ss.quotient=admissible(ss.z,Ha,Ca,Hp,Cp,n,m);
+	ss.quotient=admissible(ss.z,instance);
 	ss.taille=score(ss.z,n,m);
 
 return ss;
