@@ -27,7 +27,8 @@ solution superposition(solution const& solution1, solution const& solution2,Inst
       }
 	  }
   }
-  superp.quotient=admissible(superp.z,instance);  
+
+  // superp.quotient=admissible(superp.z,instance);  
   
   return(superp);
 }

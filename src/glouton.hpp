@@ -35,9 +35,26 @@ public:
   bool isIn(vector<SimpleSolution>& vectToCheck);
   bool isEqual(SimpleSolution& sol2);
   bool nextGreedyMove(Instance& instance);
+  bool nextGreedyMove_quotient(Instance& instance);
   bool canBeConnected(SimpleSolution& sol2);
   void superpose(SimpleSolution& sol2,Instance& instance);
+  bool bestPath(SimpleSolution& sol2, SimpleSolution& aBestPath,Instance& instance);
+  pair<int,int> find_case_interieur(int i, int j);
+  
 };
+
+class caseForPath{
+public:
+  float numa;
+  float denoma;
+  float nump;
+  float denomp;
+  float quotientIfPath;
+  pair<int,int> successorInPath;
+  caseForPath(){}
+};
+
+
 
 void tryToConnect(vector<SimpleSolution>& sols,Instance& instance);
 
@@ -49,7 +66,7 @@ void updateExtVector(vector<pair<int,int> >& extVector,zone& valeurs,int m, int 
 
 void extendInitialSol(SimpleSolution& newsol, zone& caseChecked, Instance& instance);
 
-void printSolutions( vector< SimpleSolution>& sols);
+void printSolutions( vector< SimpleSolution>& sols,Instance& instance);
 
 vector< SimpleSolution> findTrivialSolutions(Instance& instance);
 

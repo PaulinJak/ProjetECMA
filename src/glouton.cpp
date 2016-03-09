@@ -307,6 +307,39 @@ bool  SimpleSolution::nextGreedyMove(Instance& instance){
     else return false;
   }
 }
+
+bool  SimpleSolution::nextGreedyMove_quotient(Instance& instance){
+  if(exterieur.empty()) return false;
+  else{
+    pair<int,int> best=exterieur[0];
+   
+    int i=best.first, j=best.second;
+     //check si cette case est vide
+    bool isExtendWith0 =!(instance.Ca[i][j]==0 && instance.Cp[i][j]==0 && instance.Ha[i][j]==0 && instance.Hp[i][j]==0);
+    float best_quotient=(numa+instance.Ca[i][j]*instance.Ha[i][j])/(denoma+instance.Ca[i][j])+(nump+instance.Cp[i][j]*instance.Hp[i][j])/(denomp+instance.Cp[i][j]);
+    
+    for(unsigned int k=0; k< exterieur.size();k++)
+      {
+	int i=exterieur[k].first, j=exterieur[k].second;
+	//check si la case est vide
+	if(instance.Ca[i][j]==0 && instance.Cp[i][j]==0 && instance.Ha[i][j]==0 && instance.Hp[i][j]==0 ) break;
+	float k_quotient = (numa+instance.Ca[i][j]*instance.Ha[i][j])/(denoma+instance.Ca[i][j])+(nump+instance.Cp[i][j]*instance.Hp[i][j])/(denomp+instance.Cp[i][j]);
+
+	if(k_quotient>best_quotient)
+	  {
+	    best=exterieur[k];
+	    best_quotient=k_quotient;
+	    isExtendWith0=true; //on a trouvé une case meilleure, donc best n'est plus = à exterieur[0]
+	  }
+      }
+    if(isExtendable(best,instance) &&isExtendWith0){
+      addCase(best.first,best.second,instance);
+      return true;}
+    else return false;
+  }
+}
+
+
 bool SimpleSolution::isIn(vector<SimpleSolution>& vectToCheck){
   bool res= false;
   for (std::vector<SimpleSolution>::iterator solPointer = vectToCheck.begin() ; solPointer != vectToCheck.end(); ++solPointer){
@@ -354,6 +387,44 @@ void SimpleSolution::superpose(SimpleSolution& sol2,Instance& instance){
    
 }
 
+pair<int,int> SimpleSolution::find_case_interieur(int i, int j){
+
+  if (i>0 && valeurs[i-1][j]==1) return pair<int,int>(i-1,j);
+  else if (j>0 && valeurs[i][j-1]==1) return pair<int,int>(i,j-1);
+  else if (i<m && valeurs[i+1][j]==1) return pair<int,int>(i+1,j);
+  else if (i<n && valeurs[i][j+1]==1) return pair<int,int>(i,j+1);
+  else{ cout <<" WARNING CASE PAS SUR EXTERIEUR \n\n\n\n" ;
+    return pair<int,int>(0,0) ;
+  }
+}
+
+
+bool SimpleSolution::bestPath(SimpleSolution& sol2, SimpleSolution& aBestPath, Instance& instance){
+  vector< vector<int>> vus(m, vector<int>(n,0));
+  vector< pair<int,int>> aVoir;
+  
+  vector<vector<caseForPath> > casesPath(m, vector<caseForPath>(n,caseForPath()));
+  
+
+  for(unsigned int k=0; k<sol2.exterieur.size(); k++){
+    //les cases de l'exterieur de sol2 sont particulieres car ce sont les dernieres cases d'un chemin
+    int i= sol2.exterieur[k].first;
+    int j= sol2.exterieur[k].second;
+    
+    //casesPath[i][
+    aVoir.push_back(pair<int,int>(i,j));
+  }
+  
+  while(!aVoir.empty()){
+    int i=aVoir.back().first;
+    int j=aVoir.back().second;
+  }
+  
+  return false;
+
+}
+
+
 void tryToConnect(vector<SimpleSolution>& sols,Instance& instance){
   bool canConnect =(sols.size()>1);
   while(canConnect){
@@ -363,6 +434,7 @@ void tryToConnect(vector<SimpleSolution>& sols,Instance& instance){
       unsigned int sol2=sol1+1;
       while(sol2<sols.size() && !connectFound){
 	if(sols[sol1].canBeConnected(sols[sol2])){
+	  cout << "\nConnection found!!\n\n ";
 	  connectFound=true;
 	  sols[sol1].superpose(sols[sol2],instance);
 	  sols.erase(sols.begin()+sol2);
@@ -392,6 +464,8 @@ void solve_Glouton(string instancePath, fstream& outputStream){
     while (initialSols[initSol].nextGreedyMove(instance)){}
  }
 
+ printSolutions(initialSols);
+
  tryToConnect(initialSols,instance);
 
  //we need to check if some moves are now possible with the connexions
@@ -413,7 +487,7 @@ void solve_Glouton(string instancePath, fstream& outputStream){
  
   outputStream <<best_Res << " & ";
   double instance_cpu_duration = (clock() - instance_begin_time) / (double)CLOCKS_PER_SEC;
-  outputStream <<  instance_cpu_duration <<"\\\\n";
+  outputStream <<  instance_cpu_duration <<"\\ \n";
   
   printSolutions(initialSols);
  

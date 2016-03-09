@@ -99,7 +99,7 @@ voisinage.o : src/voisinage.cpp src/voisinage.h
 genetique.o :  src/genetique.cpp src/genetique.hpp
 	$(CCXX) $(LDDIRS) -o genetique.o src/genetique.cpp $(LDFLAGS) -lm $(CXXFLAGS)
 
-genetique.o :  src/glouton.cpp src/glouton.hpp
+glouton.o :  src/glouton.cpp src/glouton.hpp
 	$(CCXX) $(LDDIRS) -o glouton.o src/glouton.cpp $(LDFLAGS) -lm $(CXXFLAGS)
 
 
