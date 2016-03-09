@@ -150,20 +150,20 @@ vector<pair<int,int> > voisins(int a,int b,int n,int m)
 	}
 	return v;
 }
-float admissible(zone s, Instance& instance)
+float admissible(zone s, carte Ha, carte Ca, carte Hp, carte Cp,int n,int m)
 {
 	float numa=0;
 	float nump=0;
 	float denoma=0;
 	float denomp=0;
-	for(int i=0;i<instance.m;i++)
+	for(int i=0;i<m;i++)
 	{
-		for(int j=0;j<instance.n;j++)
+		for(int j=0;j<n;j++)
 		{
-			numa=numa+instance.Ha[i][j]*instance.Ca[i][j]*s[i][j];
-			nump=nump+instance.Hp[i][j]*instance.Cp[i][j]*s[i][j];
-			denoma=denoma+instance.Ca[i][j]*s[i][j];
-			denomp=denomp+instance.Cp[i][j]*s[i][j];
+			numa=numa+Ha[i][j]*Ca[i][j]*s[i][j];
+			nump=nump+Hp[i][j]*Cp[i][j]*s[i][j];
+			denoma=denoma+Ca[i][j]*s[i][j];
+			denomp=denomp+Cp[i][j]*s[i][j];
 		}
 	}
 	return (numa/denoma)+(nump/denomp);
@@ -180,38 +180,15 @@ float score(zone s,int n,int m)
 	}
 	return compteur;
 }
-solution voisinage1(solution s,bool* chgt,Instance& instance)
-{//on tire un chiffre n au hasard entre 0 et taille interieur +taille exterieur
-	//on permute la valeur la n-ieme case de la liste (interieur,exterieur)
-	//on teste si la connexite est preservee et on recalcule le score et le quotiennt
-	//on met à jour interieur et exterieur
-
-   int n= instance.n;
-  int m=instance.m;
-  carte Ha=instance.Ha;
-  carte Hp=instance.Hp;
-  carte Ca=instance.Ca;
-  carte Cp=instance.Cp;
-	solution ss=s;
-	int t_int=s.interieur.size(),t_ext=s.exterieur.size(),c;
-
-	c=rand()%(t_int+t_ext);
-	if(t_int==1&&c==0)
-		c++;
-	int a,b;
-	if(c<t_int)
-	{
-		a=ss.interieur[c].first;
-		b=ss.interieur[c].second;
-	}
-	else
-	{
-		c=c-t_int;
-		a=ss.exterieur[c].first;
-		b=ss.exterieur[c].second;
-	}
-	//cout<<"a et b intialises a= "<<a<<" b= "<<b<<endl;
-	if(Hp[a][b]+Ha[a][b]!=0)//on permute si la case est possible
+solution changement(solution ss,bool* chgt,Instance& instance,int a,int b)
+{
+		int n= instance.n;
+	int m=instance.m;
+	carte Ha=instance.Ha;
+	carte Hp=instance.Hp;
+	carte Ca=instance.Ca;
+	carte Cp=instance.Cp;
+	if(Cp[a][b]+Ca[a][b]!=0)//on permute si la case est possible
 	{
 		ss.z[a][b]=(ss.z[a][b]+1)%2;
 		*chgt=true;
@@ -225,7 +202,7 @@ solution voisinage1(solution s,bool* chgt,Instance& instance)
 				//on met a jour l'exterieur et l'interieur
 				vector<pair<int,int> > casesVoisines=voisins(a,b,n,m);
 				int x,y;
-				for(unsigned int i=0;i<casesVoisines.size();i++)
+				for(int i=0;i<casesVoisines.size();i++)
 				{
 					x=casesVoisines[i].first;
 					y=casesVoisines[i].second;
@@ -234,7 +211,7 @@ solution voisinage1(solution s,bool* chgt,Instance& instance)
 					{
 						vector<pair<int,int> > v_xy=voisins(x,y,n,m);
 						int compteur=0;
-						for(unsigned int j=0;j<v_xy.size();j++)
+						for(int j=0;j<v_xy.size();j++)
 						{
 							//cout<<"acces case voisine (x,y) i= "<<v_xy[i].first<<" j= "<<v_xy[i].second<<endl;
 							if(ss.z[v_xy[j].first][v_xy[j].second]==1)
@@ -243,7 +220,7 @@ solution voisinage1(solution s,bool* chgt,Instance& instance)
 						if(compteur==0)
 							//la case n'a plus de voisins dans la solution donc elle ne fait plus partie de l'exterieur
 						{
-							for(unsigned int j=0;j<ss.exterieur.size();j++)
+							for(int j=0;j<ss.exterieur.size();j++)
 							{
 								if(ss.exterieur[j].first==x&&ss.exterieur[j].second==y)
 								{
@@ -256,7 +233,7 @@ solution voisinage1(solution s,bool* chgt,Instance& instance)
 					}
 				}
 				//on passe la case dont on a change la valeur de interieur vers exterieur
-				for(unsigned int j=0;j<ss.interieur.size();j++)
+				for(int j=0;j<ss.interieur.size();j++)
 				{
 					if(ss.interieur[j].first==a&&ss.interieur[j].second==b)
 					{
@@ -281,13 +258,13 @@ solution voisinage1(solution s,bool* chgt,Instance& instance)
 		else//ss.z[a][b]==1
 		{
 			vector<pair<int,int> > v=voisins(a,b,n,m);
-			for(unsigned int i=0;i<v.size();i++)
+			for(int i=0;i<v.size();i++)
 			{
 				//cout<<"acces case voisin (a,b) x= "<<v[i].first<<" y= "<<v[i].second<<endl;
 				if(ss.z[v[i].first][v[i].second]==0)//on verifie que la case est sur l'exterieur sinon on l'ajoute
 				{
 					bool find=false;
-					for(unsigned int j=0;j<ss.exterieur.size();j++)
+					for(int j=0;j<ss.exterieur.size();j++)
 					{
 						if(ss.exterieur[j].first==v[i].first&&ss.exterieur[j].second==v[i].second)
 						{
@@ -299,26 +276,158 @@ solution voisinage1(solution s,bool* chgt,Instance& instance)
 						ss.exterieur.push_back(v[i]);
 				}
 			}
-			for(unsigned int j=0;j<ss.exterieur.size();j++)
+			for(int j=0;j<ss.exterieur.size();j++)
+			{
+				if(ss.exterieur[j].first==a&&ss.exterieur[j].second==b)
 				{
-					if(ss.exterieur[j].first==a&&ss.exterieur[j].second==b)
-					{
-						ss.exterieur.erase(ss.exterieur.begin()+j);
-						break;
-					}
+					ss.exterieur.erase(ss.exterieur.begin()+j);
+					break;
 				}
-				pair<int,int> p;
-				p.first=a;
-				p.second=b;
-				ss.interieur.push_back(p);
-				ss.taille++;
+			}
+			pair<int,int> p;
+			p.first=a;
+			p.second=b;
+			ss.interieur.push_back(p);
+			ss.taille++;
 		}
 	}
 	else
 		*chgt=false;
-	ss.quotient=admissible(ss.z,instance);
-	ss.taille=score(ss.z,n,m);
+	ss.quotient=admissible(ss.z,Ha,Ca,Hp,Cp,n,m);
+	//ss.taille=score(ss.z,n,m);
+	ss.taille=ss.interieur.size();
+	return ss;}
+solution voisinage1(solution s,bool* chgt,Instance& instance)
+{//on tire un chiffre n au hasard entre 0 et taille interieur +taille exterieur
+	//on permute la valeur la n-ieme case de la liste (interieur,exterieur)
+	//on teste si la connexite est preservee et on recalcule le score et le quotiennt
+	//on met à jour interieur et exterieur
+	solution ss=s;
+	int t_int=s.interieur.size(),t_ext=s.exterieur.size(),c;
 
-return ss;
+	c=rand()%(t_int+t_ext);
+	if(t_int==1&&c==0)
+		c++;
+	int a,b;
+	if(c<t_int)
+	{
+		a=ss.interieur[c].first;
+		b=ss.interieur[c].second;
+	}
+	else
+	{
+		c=c-t_int;
+		a=ss.exterieur[c].first;
+		b=ss.exterieur[c].second;
+	}
+	//cout<<"a et b intialises a= "<<a<<" b= "<<b<<endl;
+	ss=changement(ss,chgt,instance,a,b);
+	return ss;
+}
+solution maxlocal1(solution s, bool* chgt,Instance& instance)
+{
+	solution ss=s;
+	solution sss=s;
+	bool max=false;
+	*chgt=false;
+	for(int i=0; i<ss.exterieur.size();i++)
+	{
+		sss=changement(ss,&max,instance,ss.exterieur[i].first,ss.exterieur[i].second);
+		if(sss.taille>ss.taille&&sss.quotient>=2)
+		{
+			ss=sss;
+			*chgt=true;
+			break;
+		}
+	}
+	return ss;
+}
+solution maxlocal2(solution s, bool* chgt,Instance& instance)
+{
+	solution ss=s;
+	solution sss=s;
+	bool max=false;
+	*chgt=false;
+	for(int i=0; i<ss.exterieur.size();i++)
+	{
+		sss=changement(ss,&max,instance,ss.exterieur[i].first,ss.exterieur[i].second);
+		for(int j=i+1;j<ss.exterieur.size();j++){
+			sss=changement(sss,&max,instance,ss.exterieur[j].first,ss.exterieur[j].second);
+		if(sss.taille>ss.taille&&sss.quotient>=2)
+		{
+			ss=sss;
+			*chgt=true;
+			break;
+		}
+		}
+		for(int j=0;j<ss.interieur.size();j++){
+			sss=changement(sss,&max,instance,ss.interieur[j].first,ss.interieur[j].second);
+		if(sss.taille>ss.taille&&sss.quotient>=2)
+		{
+			ss=sss;
+			*chgt=true;
+			break;
+		}
+		}
+	}
+	return ss;
+}
+solution voisinagesup2(solution s,bool* chgt,Instance& instance)
+{//on ajoute à la solution toutes les cases de coeff supérieur à 2
+
+	int n= instance.n;
+	int m=instance.m;
+	carte Ha=instance.Ha;
+	carte Hp=instance.Hp;
+	carte Ca=instance.Ca;
+	carte Cp=instance.Cp;
+	solution ss=s;
+	int a,b;
+	for(int e=0;e<ss.exterieur.size();e++)
+	{
+		a=ss.exterieur[e].first;
+		b=ss.exterieur[e].second;
+		if((Cp[a][b]+Cp[a][b]+Hp[a][b]+Ha[a][b])!=0&&(Ha[a][b]+Hp[a][b])>=2)//on permute si la case est possible
+		{
+			ss.z[a][b]=1;
+			*chgt=true;
+			vector<pair<int,int>> v=voisins(a,b,n,m);
+			for(int i=0;i<v.size();i++)
+			{
+				//sortie<<"acces case voisin (a,b) x= "<<v[i].first<<" y= "<<v[i].second<<endl;
+				if(ss.z[v[i].first][v[i].second]==0)//on verifie que la case est sur l'exterieur sinon on l'ajoute
+				{
+					bool find=false;
+					for(int j=0;j<ss.exterieur.size();j++)
+					{
+						if(ss.exterieur[j].first==v[i].first&&ss.exterieur[j].second==v[i].second)
+						{
+							find=true;
+							break;
+						}
+					}
+					if(!find)
+						ss.exterieur.push_back(v[i]);
+				}
+			}
+			for(int j=0;j<ss.exterieur.size();j++)
+			{
+				if(ss.exterieur[j].first==a&&ss.exterieur[j].second==b)
+				{
+					ss.exterieur.erase(ss.exterieur.begin()+j);
+					break;
+				}
+			}
+			pair<int,int> p;
+			p.first=a;
+			p.second=b;
+			ss.interieur.push_back(p);
+			ss.taille++;
+		}
+	}
+	ss.quotient=admissible(ss.z,Ha,Ca,Hp,Cp,n,m);
+	//ss.taille=score(ss.z,n,m);
+	ss.taille=ss.interieur.size();
+	return ss;
 }
 

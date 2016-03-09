@@ -26,7 +26,7 @@ void set_params();
 
 void getData2(ifstream& fichier,Instance& instance);
 
-solution voisinage(solution s,Instance& instance);
+solution voisinage(solution s,Instance& instance,int K);
 
 solution initialisation(Instance& instance);
 
