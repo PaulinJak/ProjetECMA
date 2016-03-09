@@ -60,11 +60,18 @@
 		\HRule \\[0.4cm]
 		{\huge \bfseries \reporttitle}\\[0.4cm]
 		\HRule \\[1.5cm]
-		\begin{minipage}[t]{0.35\textwidth}
-			\begin{flushleft} \large
-				\emph{Auteurs :}\\
+		\begin{minipage}[t]{0.6\textwidth}
+			\begin{center} \large
+				
 					\reportauthor
-			\end{flushleft}
+					
+					\vspace{3cm}
+					
+				\emph{Professeurs responsables :}\\
+					Amélie Lambert \\
+					Cédric Bentz
+					
+			\end{center}
 		\end{minipage}
 		\vfill
 		{\large \today}
@@ -247,10 +254,10 @@ projet 5 8 9 &23 & 23 & 1.18512\\ \hline
 projet 5 8 10 &40 & 40 & 0.01264\\ \hline
 \end{array}\]
 Total simulation time : 13.0807s.
-\end{array}
-\]
-\label{tabMinEdges}
+
 \caption{Résolution directe avec minimisation des bords.}
+\label{tabMinEdges}
+
 \end{figure}
 
 
@@ -292,10 +299,269 @@ Voici l'algorithme du recuit simulé:
 		\ENDFOR
 	\end{algorithmic}
 \end{algorithm}
+
 \subsection{Description des voisinages utilisés}
 En plus du choix des paramètres, le voisinage utilisé influence l'efficacité de l'algorithme. La première idée a été de créer un voisinage constitué de toutes les solutions différant de 1 par rapport à la solution initiale et de l'évaluer si la solution obtenue était connexe. Cette solution n'est pas idéale dans le cas où il y a peu de cases dont la valeur puisse être changée tout en gardant la connexité de la solution.\\
 La fonction de voisinage implémentée commence donc par voir si on peut ajouter à la solution une case dont la somme des coefficients $H-a[i][j]+H_p[i][j]>=2$. Si oui, la solution est générée en ajoutant toutes les cases répondant à ce critère. Si ce n'est pas le cas, l'algorithme tire au hasard une des cases parmi celles à 1 dans la solution d'origine et les voisines de celles-ci. Si la solution obtenue en changeant la valeur de la case tirée au sort est connexe alors la fonction de voisinage renvoie la solution obtenue. Sinon elle tire au sort une autre case.
+
 \subsection{Résultats obtenus}
 L'algorithme est assez efficace et trouve une bonne solution en moins de quelques secondes pour les petites instances et en moins de 2 minutes pour les plus grandes même s'il ne trouve pas toujours le maximum.\\
->>>>>>> 7d56ca5b611a2f669dd91804db5a120731aad5fb
+
+
+
+\vspace{1cm}
+
+\section{Une méthode gloutonne}
+
+Nous présentons ici une méthode gloutonne, qui a l'avantage d'être très rapide et donne de très bons résultats (supérieurs ou égals au recuit) dans plus de la moitié des cas, mais qui ne permet pas de trouver l'optimum dans certaines instances.
+
+\subsection{Principe de l'algorithme}
+
+L'implémentation de cette méthode se fait de manière pratique en considérant une classe C++ $SimpleSolution$ contenant la carte des cases sélectionnées, une liste des cases à la limite extérieure de la solution, la taille et le quotient ($ \dfrac{\sum H_{ij}^pC_{ij}^p x_{ij}}{\sum C_{ij}^p x_{ij}}+ \dfrac{\sum H_{ij}^a C_{ij}^a x_{ij}}{\sum C_{ij}^a x_{ij}} $ )actuels  de la solution.
+
+\vspace{0.5cm}
+
+Il est clair qu'une case avec un coefficient $H_a + H_p \geq 2$ et dans le voisinage d'une solution réalisable doit être nécessairement prise, puisqu'elle augmente la taille de la solution.
+ L'algorithme repose sur ce principe. La phase d'initialisation consiste à trouver les différentes zones connexes de cases  possédant des coefficients supérieurs à 2(algo \ref{Alg::rechercheZone}). Pour trouver la zone maximale de cases de coefficients supérieur à  2, on utilise une structure de file sur les cases extérieures de la solution.
+ 
+ \vspace{0.5cm}
+
+
+ \begin{algorithm}
+	\caption{Initialisation des solutions}
+	\begin{algorithmic}[1]
+	\STATE Initialiser un vecteur $InitialSols$.
+	\STATE Initialiser un vecteur $casesDejaPrises$.
+	\FOR{toute case $(i,j)$ de l'instance}
+		\IF{$casesDejaPrises(i,j)=0 $ \AND $Coeff(i,j) \geq 2$}
+			\STATE Creer nouvelle solution $Sol$ à partir de $(i,j)$
+			\STATE $casesDejaPrises(i,j)=1$
+			\WHILE{on trouve des cases en bordure de $Sol$ de $Coeff\geq2$}
+				\STATE Ajouter ces cases à $Sol$ et les marquer dans $casesDejaPrises$.					\ENDWHILE
+		\STATE Ajouter $Sol$ à $InitialSols$.
+		\ENDIF
+	\ENDFOR
+	\RETURN $InitialSols$	
+	\end{algorithmic}
+	 	\label{Alg::rechercheZone}
+\end{algorithm}
+
+ 
+La deuxième phase consiste à étendre ces solutions le plus possible de manière gloutonne . Pour cela, on va utiliser encore la structure d'"extérieur" de la solution. On recherche la case de coefficient maximal $H_a+H_p$, et on l'ajoute à la solution (une version gloutonne où l'on tire la case qui maximise le quotient total a également été testée). Ceci est présenté dans l'algorithme \ref{Alg::choix glouton}.
+
+
+ \begin{algorithm}
+	\caption{Augmentation gloutonne d'une solution $Sol$}
+	\begin{algorithmic}[1]
+	\STATE Considérer la liste des cases en bordure de $Sol$ : $exterieur$
+	\STATE Initialiser $bestCoeff =Coeff(exterieur[0]$ et $best=exterieur[0]$
+	\FOR{toute $case$ de $exterieur$}
+		\IF{la $case$ existe et est de coeff$>best Coeff$ }
+			\STATE $bestCoeff=Coeff(case)$, et $best = case$
+			\ENDIF
+	\ENDFOR
+		\IF{l'ajout de $best$ à $Sol$ conserve un $quotient \geq 2$}
+			\STATE Ajouter $best$ à $Sol$, update  extérieur et quotient.
+	\ENDIF
+	\end{algorithmic}
+	 	\label{Alg::choix glouton}
+\end{algorithm}
+
+\vspace{0.5cm}
+
+Ce mouvement glouton est donc opéré jusqu'à saturation. 
+La dernière étape de l'algorithme consiste à rassembler des morceaux adjacents provenant de plusieurs solutions initiales (c'est à dire de plusieurs zones de cases à coefficients $\geq 2$).
+	Pour cela, étant donné deux solutions $Sol1$ et $Sol2$, il suffit de vérifier si les cases dans la bordure extérieures à $Sol1$ font partie de la $Sol2$, ce qui est réalisé si et seulement si l'union des deux solutions forme une partie connexe.
+	Le cas échéant, on superpose donc les solutions en mettant à jour les données.
+	
+	Comme plusieurs "rassemblements" de solutions peuvent être opérés, on cherche donc à rassembler les solutions jusqu'à ce que plus aucun rassemblement ne soit possible. Ceci est détaillé dans l'algorithme \ref{Alg::rassemblement}.
+	
+	\begin{algorithm}
+	\caption{Rassemblement possibles d'une liste de solutions $solSet$}
+	\begin{algorithmic}[1]
+	\STATE initialiser $rassemblementPossible =true$
+	\WHILE{$rassemblementPossible$}
+		\STATE Faire $rassemblementPossible =false$
+	\FOR{toute paire de solutions $Sol1$, $Sol2$ de $solSet$}
+		\IF{$Sol1$ et $Sol2$ peuvent être rassemblées}
+			\STATE Superposer $Sol2$ à $Sol1$.
+			\STATE Retirer $Sol2$ de $solSet$.
+			\STATE $rassemblementPossible =true$
+		\ENDIF
+	\ENDFOR
+	\ENDWHILE
+	 \RETURN $solSet$
+	\end{algorithmic}
+	 	\label{Alg::rassemblement}
+\end{algorithm}
+
+\vspace{0.5cm}
+
+Comme le fait de superposer une autre solution à une solution a pu augmenter son quotient, il est possible qu'ajouter de nouvelles cases de l'extérieur soit à nouveau possible. Ainsi, on essaie à nouveau d'agrandir la solution par des mouvements gloutons tant que possible, en appelant à nouveau l'algo \ref{Alg::choix glouton}.
+
+\vspace{0.5cm}
+
+L'algorithme final est donné en algo \ref{Alg::glouton total} :
+
+	\begin{algorithm}
+	\caption{Algorithme glouton de résolution}
+	\begin{algorithmic}[1]
+	\STATE Lire l'instance
+	\STATE Trouver les solutions initiales $SolSet $ avec l'algo \ref{Alg::rechercheZone}
+	\FOR{ chaque solution $sol$ de $SolSet$}
+		\WHILE{une augmentation gloutonne de $sol$ est possible avec algo \ref{Alg::choix glouton}}
+		\STATE Opérer cette augmentation sur $sol$
+		\ENDWHILE
+	\ENDFOR
+	\STATE Opérer les rassemblements possibles sur $SolSet$ avec algo \ref{Alg::rassemblement}
+	\FOR{ chaque solution $sol$ de $SolSet$}
+		\WHILE{une augmentation gloutonne de $sol$ est possible avec algo \ref{Alg::choix glouton}}
+		\STATE Opérer cette augmentation sur $sol$
+		\ENDWHILE
+	\ENDFOR
+	 \RETURN la solution de $solSet$ de taille maximale.
+	\end{algorithmic}
+	 	\label{Alg::glouton total}
+\end{algorithm}
+
+\subsection{Résultats}
+
+	Les résultats pour toutes les instances sont données dans les tableaux suivants :
+	
+
+\begin{figure}[H]
+\centering
+
+\[
+\begin{array}{c|c|c}
+\text{Instance} & \text{Res connexe }& \text{CPU time (s)} \\\hline
+projet \ 5 \times 8 \ 1 &24 & 6.9e-05\\ \hline 
+projet \ 5 \times 8 \ 2 &4 & 3.8e-05\\ \hline 
+projet \ 5 \times 8 \ 3 &30 & 4.7e-05\\ \hline 
+projet \ 5 \times 8 \ 4 &18 & 4.4e-05\\ \hline 
+projet \ 5 \times 8 \ 5 &40 & 5.2e-05\\ \hline 
+projet \ 5 \times 8 \ 6 &23 & 5.1e-05\\ \hline 
+projet \ 5 \times 8 \ 7 &29 & 9.4e-05\\ \hline 
+projet \ 5 \times 8 \ 8 &28 & 5.1e-05\\ \hline 
+projet \ 5 \times 8 \ 9 &13 & 8e-05\\ \hline 
+projet \ 5 \times 8 \ 10 &40 & 5.3e-05\\ \hline 
+\end{array}\]
+Total simulation time : 0.005526s.
+
+\label{Res::Glouton 5x8}
+\caption{Résolution gloutonne pour les instances 5x8}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+
+\[
+\begin{array}{c|c|c|c}
+Nom instance & Res connexe & CPU time \\ \hline
+projet \ 12 \times 10 \ 1 &32 & 0.000133\\ \hline 
+projet \ 12 \times 10 \ 2 &4 & 7.2e-05\\ \hline 
+projet \ 12 \times 10 \ 3 &55 & 9.4e-05\\ \hline 
+projet \ 12 \times 10 \ 4 &37 & 0.000155\\ \hline 
+projet \ 12 \times 10 \ 5 &120 & 4.6e-05\\ \hline 
+projet \ 12 \times 10 \ 6 &50 & 3.8e-05\\ \hline 
+projet \ 12 \times 10 \ 7 &21 & 5.9e-05\\ \hline 
+projet \ 12 \times 10 \ 8 &78 & 4.2e-05\\ \hline 
+projet \ 12 \times 10 \ 9 &32 & 6e-05\\ \hline 
+projet \ 12 \times 10 \ 10 &115 & 4.6e-05\\ \hline 
+\end{array}\]
+Total simulation time : 0.009353s.
+
+\label{Res::Glouton 12x10}
+\caption{Résolution gloutonne pour les instances 12x10}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+
+\[
+\begin{array}{c|c|c|c}
+Nom instance & Res connexe & CPU time \\ \hline
+projet \ 15 \times 17 \ 1 &31 & 7.2e-05\\ \hline 
+projet \ 15 \times 17 \ 2 &8 & 9.8e-05\\ \hline 
+projet \ 15 \times 17 \ 3 &102 & 7.3e-05\\ \hline 
+projet \ 15 \times 17 \ 4 &117 & 0.000129\\ \hline 
+projet \ 15 \times 17 \ 5 &255 & 9.5e-05\\ \hline 
+projet \ 15 \times 17 \ 6 &109 & 0.000204\\ \hline 
+projet \ 15 \times 17 \ 7 &51 & 0.000107\\ \hline 
+projet \ 15 \times 17 \ 8 &139 & 0.000145\\ \hline 
+projet \ 15 \times 17 \ 9 &87 & 0.000183\\ \hline 
+projet \ 15 \times 17 \ 10 &242 & 9.6e-05\\ \hline 
+\end{array}\]
+Total simulation time : 0.014074s. 
+
+
+\label{Glouton 15x17 }
+\caption{Résolution gloutonne pour les instances 15x17}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+
+\[
+\begin{array}{c|c|c|c}
+Nom instance & Res connexe & CPU time \\ \hline
+projet \ 20 \times 25 \ 1 &52 & 0.000266\\ \hline 
+projet \ 20 \times 25 \ 2 &20 & 0.000112\\ \hline 
+projet \ 20 \times 25 \ 3 &158 & 0.00014\\ \hline 
+projet \ 20 \times 25 \ 4 &131 & 0.000184\\ \hline
+projet \ 20 \times 25 \ 5 &500 & 0.000215\\ \hline 
+projet \ 20 \times 25 \ 6 &80 & 0.000356\\ \hline 
+projet \ 20 \times 25 \ 7 &68 & 0.000245\\ \hline 
+projet \ 20 \times 25 \ 8 &253 & 0.000318\\ \hline 
+projet \ 20 \times 25 \ 9 &183 & 0.000214\\ \hline 
+projet \ 20 \times 25 \ 10 &427 & 0.00024\\ \hline 
+\end{array}\]
+Total simulation time : 0.026662s.
+
+
+\label{Res::Glouton 20x25}
+\caption{Résolution gloutonne pour les instances 20x25}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+
+\[
+\begin{array}{c|c|c|c}
+Nom instance & Res connexe & CPU time \\ \hline
+projet \ 25 \times 30 \ 1 &88 & 0.000331\\ \hline
+projet \ 25 \times 30 \ 2 &51 & 0.000513\\ \hline 
+projet \ 25 \times 30 \ 3 &229 & 0.000387\\ \hline 
+projet \ 25 \times 30 \ 4 &63 & 0.000615\\ \hline 
+projet \ 25 \times 30 \ 5 &750 & 0.000677\\ \hline 
+projet \ 25 \times 30 \ 6 &67 & 0.000994\\ \hline 
+projet \ 25 \times 30 \ 7 &83 & 0.000515\\ \hline 
+projet \ 25 \times 30 \ 8 &321 & 0.000729\\ \hline 
+projet \ 25 \times 30 \ 9 &246 & 0.000649\\ \hline 
+projet \ 25 \times 30 \ 10 &557 & 0.000589\\ \hline 
+\end{array}\]
+Total simulation time : 0.065235s.
+
+\label{Res::Glouton 25x30}
+\caption{Résolution gloutonne pour les instances 25x30}
+\end{figure}
+
+Comme on peut le voir, l'algorithme est très rapide, en utilisant les structures de files et de vecteurs. Ainsi le traitement des plus grandes instances se fait en moins de d'un dixième de seconde.
+
+\vspace{0.5cm}
+
+
+On a également songé à effectuer un algorithme amélioré qui, avant de chercher à étendre la solution de manière gloutonne, chercherait à connecter en priorité les composantes admissibles, et le cas échéant ajouterait ces solutions connectées dans l'ensemble de solutions à étendre.
+
+\vspace{0.5cm}
+
+\section*{Conclusion}
+
+	Ce projet a permis de mettre en oeuvre des méthodes variées et de comparer leur efficacité pratique. D'un point de vue théorique, nous avons pu voir que ce problème assez  complexe pouvait se modéliser sous la forme d'un programme linéaire. Nous pouvons alors utiliser un solveur linéaire pour le résoudre. Néanmoins, en pratique, si l'utilisation du solveur permet de trouver une solution optimale, cela n'est possible que sur des instances de petite taille. 
+	
+	L'utilisation d'une métaheuristique permet d'avoir de très bons résultats en un temps raisonable. Ainsi, le recuit simulé amélioré avec une variation des voisinages que nous avons implémenté permet de s'approcher de la valeur optimale sur les plus grandes instances.
+	
+	Enfin une méthode heuristique gloutonne donne très rapidement un résultat quelle que 
+soit l'instance, mais dont l'écart à l'optimum de cette solution est plus variable.
+
 \end{document}
